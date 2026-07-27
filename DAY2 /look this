@@ -1,0 +1,149 @@
+The monitoring folder is just like a folder on your Windows desktop. Inside it, you'll create multiple Python files.
+
+Your project will eventually look like this:
+
+ACTDRS/
+│
+├── app.py
+├── requirements.txt
+│
+├── monitoring/
+│      ├── cpu_monitor.py
+│      ├── ram_monitor.py
+│      ├── disk_monitor.py
+│      └── process_monitor.py
+│
+├── logs/
+├── config/
+├── ai/
+├── response/
+└── dashboard/
+How to create a Python file inside a folder?
+
+There are 3 methods. I'll teach you all of them.
+
+Method 1 (Recommended): Using VS Code ⭐⭐⭐⭐⭐
+
+This is how professional developers usually do it.
+
+Step 1
+
+Open your ACTDRS folder in VS Code.
+
+From the Ubuntu terminal:
+
+code .
+
+The . means "open the current folder".
+
+Step 2
+
+On the left side, you'll see:
+
+ACTDRS
+│
+├── monitoring
+├── ai
+├── logs
+...
+Step 3
+
+Right-click on the monitoring folder.
+
+Choose:
+
+New File
+Step 4
+
+Type:
+
+cpu_monitor.py
+
+Press Enter.
+
+Done! 🎉
+
+Now create:
+
+ram_monitor.py
+
+Then:
+
+disk_monitor.py
+
+Then:
+
+process_monitor.py
+Method 2: Using the Terminal ⭐⭐⭐⭐
+
+Suppose you're already inside the ACTDRS folder.
+
+Create a file like this:
+
+touch monitoring/cpu_monitor.py
+
+This creates:
+
+monitoring/
+    cpu_monitor.py
+
+Similarly:
+
+touch monitoring/ram_monitor.py
+touch monitoring/disk_monitor.py
+touch monitoring/process_monitor.py
+Method 3: Using Nano (Terminal Text Editor) ⭐⭐⭐
+
+Create and edit the file in one step:
+
+nano monitoring/cpu_monitor.py
+
+A text editor opens.
+
+Paste your Python code.
+
+To save:
+
+Press Ctrl + O
+Press Enter
+
+To exit:
+
+Press Ctrl + X
+Which method should you use?
+
+Since this is your first software project, I recommend:
+
+✅ VS Code
+
+Because later you'll have:
+
+50+ Python files
+Hundreds of lines of code
+AI models
+HTML
+CSS
+JavaScript
+
+VS Code makes all of that much easier to manage.
+
+What you should do now
+Open the ACTDRS folder:
+cd ~/ACTDRS
+Open it in VS Code:
+code .
+Right-click the monitoring folder → New File.
+Create these four files:
+cpu_monitor.py
+ram_monitor.py
+disk_monitor.py
+process_monitor.py
+Quick question
+
+Can you open VS Code by running:
+
+code .
+
+inside your ACTDRS folder?
+
+If yes, I'll show you how to write your first Python program (cpu_monitor.py) and explain every line so you understand not just what it does, but why it's written that way.
