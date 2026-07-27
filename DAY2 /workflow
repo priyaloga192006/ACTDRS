@@ -1,0 +1,309 @@
+Step 1: What is Architecture?
+
+Before writing any code, every software project has a blueprint.
+
+Think of building a house.
+
+You don't start by placing bricks randomly.
+
+First, an architect draws:
+
+Living room
+Kitchen
+Bedroom
+Bathroom
+
+Only then do workers build the house.
+
+Software is exactly the same.
+
+For ACTDRS, the blueprint (architecture) looks like this:
+
+            User Dashboard
+                  ▲
+                  │
+          Response Engine
+                  ▲
+                  │
+          AI Decision Engine
+                  ▲
+                  │
+          Threat Detection
+                  ▲
+                  │
+         System Monitoring
+
+This is not something you need to create in Ubuntu. It's only to help you understand how the project works.
+
+What does each block do?
+1️⃣ System Monitoring
+
+This is the eyes and ears of ACTDRS.
+
+It collects information like:
+
+CPU usage
+RAM usage
+Disk usage
+Running processes
+Network traffic
+
+Example:
+
+CPU : 18%
+RAM : 42%
+Disk : 67%
+
+Without monitoring, ACTDRS knows nothing.
+
+2️⃣ Threat Detection
+
+Now the collected data is analyzed.
+
+Example:
+
+CPU suddenly becomes 100%
+
+or
+
+Unknown process started
+
+or
+
+500 login attempts in one minute
+
+Then ACTDRS thinks:
+
+"Something looks suspicious."
+
+3️⃣ AI Decision Engine
+
+Now AI decides what to do.
+
+Example:
+
+Normal?
+↓
+
+No
+↓
+
+Looks like ransomware
+↓
+
+Confidence = 98%
+4️⃣ Response Engine
+
+Now ACTDRS takes action.
+
+Example:
+
+Kill malicious process
+Block attacker IP
+Disable network
+Save logs
+Notify owner
+5️⃣ User Dashboard
+
+This is what the user sees.
+
+Example:
+
+Today's Threats
+
+✔ Malware Blocked
+✔ IP Blocked
+✔ CPU Normal
+
+Status
+
+SAFE
+So what are we building today?
+
+Only the first block.
+
+System Monitoring
+
+We're not building AI yet.
+
+Step 2: Project Structure
+
+Now comes the actual work.
+
+Suppose your ACTDRS folder currently looks like this:
+
+ACTDRS
+
+Only one folder.
+
+We need to organize it.
+
+Think of it like this.
+
+If you build a house,
+
+You don't keep
+
+clothes
+books
+kitchen utensils
+tools
+
+inside one room.
+
+You make separate rooms.
+
+Software is the same.
+
+Final folder structure
+
+Your ACTDRS folder should become:
+
+ACTDRS
+│
+├── monitoring
+├── ai
+├── response
+├── dashboard
+├── logs
+├── config
+│
+├── app.py
+├── requirements.txt
+
+Each folder has one responsibility.
+
+What does each folder do?
+monitoring/
+
+Contains programs that collect information.
+
+Example:
+
+CPU monitor
+
+RAM monitor
+
+Disk monitor
+
+Network monitor
+ai/
+
+Contains machine learning code.
+
+Later we'll put
+
+AI model
+
+Training code
+
+Prediction code
+
+inside this folder.
+
+response/
+
+Contains automatic response code.
+
+Example:
+
+Kill process
+
+Block IP
+
+Disable USB
+dashboard/
+
+Contains the web interface.
+
+Later, when you open
+
+http://localhost:5000
+
+you'll see your cybersecurity dashboard.
+
+logs/
+
+Stores log files.
+
+Example:
+
+2026-07-25.log
+
+alerts.log
+
+system.log
+config/
+
+Stores settings.
+
+Example:
+
+Threshold = 80%
+
+Notification = ON
+Now let's actually create them
+
+Go to your Ubuntu terminal.
+
+Make sure you're inside ACTDRS.
+
+Check by typing:
+
+pwd
+
+It should show something like:
+
+/home/priya/ACTDRS
+
+Now type:
+
+mkdir monitoring
+
+Press Enter.
+
+Nothing will happen—that means it worked.
+
+Now type:
+
+mkdir ai
+
+Press Enter.
+
+Then:
+
+mkdir response
+
+Then:
+
+mkdir dashboard
+
+Then:
+
+mkdir logs
+
+Then:
+
+mkdir config
+
+Now check that the folders were created:
+
+ls
+
+You should see something like:
+
+ai
+config
+dashboard
+logs
+monitoring
+response
+venv
+We are not creating any Python code yet.
+
+Today's first objective is simply to organize the project, just like organizing rooms in a new house before moving furniture in.
+
+After you create the folders, send me the output of:
+ls
+
+or a screenshot of the terminal. Once I confirm the structure is correct, we'll create your first Python file (cpu_monitor.py) together.
