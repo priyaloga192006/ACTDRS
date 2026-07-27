@@ -1,0 +1,220 @@
+This is where your project becomes more interesting.
+
+Do not add a watchdog yet.
+
+A common mistake is trying to build advanced features before the foundation exists. Right now, ACTDRS can only monitor. It cannot yet detect threats, analyze them, or respond. A watchdog would simply restart a basic monitoring script.
+
+We should build ACTDRS in layers.
+
+ACTDRS Development Roadmap
+Phase 1 : Monitoring System          ✅ (Current Phase)
+Phase 2 : Threat Detection Engine
+Phase 3 : AI Decision Engine
+Phase 4 : Automatic Response Engine
+Phase 5 : Dashboard
+Phase 6 : Self-Healing (Watchdog)
+Phase 7 : Cloud Notification
+
+The Self-Healing feature only makes sense after the response engine exists.
+
+Where are we now?
+✓ Project setup
+✓ Python environment
+✓ VS Code
+✓ psutil
+✓ Reading CPU
+✓ Reading RAM
+✓ Reading Disk
+✓ Reading Processes
+✓ Continuous monitoring
+
+Next:
+➡ Detect suspicious activity
+Tomorrow's goal (Threat Detection)
+
+Instead of showing only:
+
+CPU : 20%
+RAM : 40%
+Disk : 30%
+
+ACTDRS should start thinking.
+
+For example:
+
+CPU = 95%
+
+↓
+
+Why?
+
+↓
+
+High CPU for 15 seconds
+
+↓
+
+Possible malware or crypto miner
+
+↓
+
+Generate Alert
+How does ACTDRS think?
+
+We'll create rules.
+
+Rule 1
+IF CPU > 90%
+
+↓
+
+Raise CPU Alert
+Rule 2
+IF RAM > 90%
+
+↓
+
+Raise Memory Alert
+Rule 3
+IF Disk > 95%
+
+↓
+
+Disk Almost Full
+Rule 4
+IF Unknown Process Appears
+
+↓
+
+Suspicious Process
+Architecture
+System Monitor
+
+↓
+
+Collect Data
+
+↓
+
+Threat Detection Engine
+
+↓
+
+Normal?
+      │
+      ├── Yes → Continue Monitoring
+      │
+      └── No
+           │
+           ▼
+      Create Alert
+
+Notice that AI is not involved yet.
+
+Why no AI yet?
+
+Think about a doctor.
+
+Measure Temperature
+
+↓
+
+Measure Blood Pressure
+
+↓
+
+Measure Heart Rate
+
+↓
+
+Collect Reports
+
+↓
+
+Diagnosis
+
+↓
+
+Treatment
+
+The doctor cannot diagnose without measurements.
+
+Likewise, AI cannot decide anything until ACTDRS has collected system information and identified abnormal conditions.
+
+Tomorrow's coding plan
+
+We'll modify system_monitor.py.
+
+Instead of only printing values, we'll check them.
+
+Example logic:
+
+Read CPU
+
+↓
+
+Is CPU > 90% ?
+
+↓
+
+Yes
+
+↓
+
+Print
+
+⚠ High CPU Usage Detected
+
+Then:
+
+Read RAM
+
+↓
+
+Is RAM > 90% ?
+
+↓
+
+Yes
+
+↓
+
+⚠ High RAM Usage
+
+This is the first version of the Threat Detection Engine.
+
+When do we build the Watchdog?
+
+Only after this sequence:
+
+Monitor
+
+↓
+
+Detect
+
+↓
+
+Analyze
+
+↓
+
+Respond
+
+↓
+
+Self-Heal
+
+Otherwise, we'd just be restarting a program that isn't yet capable of protecting the system.
+
+Your task now
+
+Since your monitoring loop is working:
+
+Save your current system_monitor.py.
+Test it for a few minutes to confirm it continuously prints CPU, RAM, Disk, and Processes.
+Stop it with Ctrl + C.
+
+At that point, you've completed the Monitoring Module.
+
+The next coding session will begin the Threat Detection Module, where ACTDRS starts distinguishing between normal and suspicious behavior instead of simply displaying system information.
