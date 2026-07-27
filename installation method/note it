@@ -1,0 +1,91 @@
+No. You don't "connect" Python with Linux.
+
+This is a very common confusion. Let me explain.
+
+Think of your setup like this:
+Your Laptop
+│
+├── Windows 11
+│      ├── Python (Windows)
+│      ├── VS Code (Windows)
+│      └── Git (Windows)
+│
+└── VirtualBox
+       │
+       └── Ubuntu Linux
+              ├── Python (Linux)
+              ├── Git (Linux)
+              └── ACTDRS Project
+
+Notice something important:
+
+Windows has its own Python installation.
+Ubuntu has its own Python installation.
+
+They are completely separate.
+
+Why?
+
+Your ACTDRS project is a Linux-based cybersecurity system.
+
+It needs to use Linux features such as:
+
+/var/log
+systemctl
+journalctl
+Linux processes
+Linux services
+Linux firewall (UFW)
+Linux permissions
+
+The Windows Python installation cannot directly work with those Linux components.
+
+Do I need to install Python again?
+
+First, check whether Python is already installed in Ubuntu.
+
+Open the Ubuntu Terminal and type:
+
+python3 --version
+If you get something like:
+Python 3.12.3
+
+✅ Great! You do not need to install Python again.
+
+Just install pip:
+
+sudo apt install python3-pip
+If you get:
+Command 'python3' not found
+
+Then install Python:
+
+sudo apt install python3
+Do I need to connect Windows Python with Ubuntu?
+
+No.
+
+The Ubuntu Python interpreter will run your ACTDRS project.
+
+The Windows Python installation is unrelated to this project.
+
+My recommendation
+
+Since ACTDRS is a Linux project, do everything inside Ubuntu:
+
+✅ Write the code in Ubuntu.
+✅ Run Python in Ubuntu.
+✅ Install libraries with pip3 in Ubuntu.
+✅ Test everything in Ubuntu.
+
+This avoids compatibility problems later.
+
+Let's verify your Ubuntu installation.
+
+Open the Ubuntu Terminal and run:
+
+python3 --version
+
+Copy and paste the output here.
+
+Based on that, I'll tell you the exact next step—whether you already have Python or need to install it.
