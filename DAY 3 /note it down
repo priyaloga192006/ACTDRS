@@ -1,0 +1,128 @@
+Absolutely. You're mixing where to write code and where to type commands. This is one of the biggest hurdles for beginners, so let's make it crystal clear.
+
+There are ONLY 2 places you'll work
+1️⃣ VS Code Editor → Write Python code
+
+This is where you write your program.
+
+For example, open:
+
+monitoring/
+    system_monitor.py
+
+Inside that file, type Python code like:
+
+import psutil
+
+print("Hello ACTDRS")
+
+Then press Ctrl + S to save.
+
+Never type Linux commands here.
+
+2️⃣ Ubuntu Terminal → Run commands
+
+The terminal is for commands like:
+
+python3 monitoring/system_monitor.py
+
+or
+
+pip install psutil
+
+or
+
+mkdir monitoring
+
+Never write Python programs here.
+
+Now about Step 4 and Step 5
+Step 4 (Write the code)
+
+Where?
+
+👉 Inside VS Code
+
+Open:
+
+ACTDRS
+└── monitoring
+      └── system_monitor.py
+
+Delete any old content and paste:
+
+import psutil
+
+print("========= ACTDRS System Monitor =========")
+
+cpu = psutil.cpu_percent(interval=1)
+memory = psutil.virtual_memory()
+disk = psutil.disk_usage('/')
+
+print(f"CPU Usage : {cpu}%")
+print(f"RAM Usage : {memory.percent}%")
+print(f"Disk Usage : {disk.percent}%")
+
+Save it:
+
+Ctrl + S
+
+Step 5 (Run the code)
+
+Where?
+
+👉 Ubuntu Terminal
+
+Open the terminal in VS Code:
+
+Click Terminal in the top menu.
+Click New Terminal.
+
+You'll see something like:
+
+(venv) priya@priya-VirtualBox:~/ACTDRS$
+
+Now type:
+
+python3 monitoring/system_monitor.py
+
+Press Enter.
+
+You should see output similar to:
+
+========= ACTDRS System Monitor =========
+CPU Usage : 12%
+RAM Usage : 38%
+Disk Usage : 45%
+Visual Example
+VS Code (Write)
+system_monitor.py
+--------------------------------
+import psutil
+
+print("Hello")
+
+⬇️ Save (Ctrl + S)
+
+Terminal (Run)
+(venv) priya@priya-VirtualBox:~/ACTDRS$ python3 monitoring/system_monitor.py
+
+⬇️ Output
+
+Hello
+Simple Rule
+What you want to do	Where?
+Write Python code	✅ VS Code Editor
+Save the file	✅ VS Code (Ctrl + S)
+Install libraries (pip install ...)	✅ Ubuntu Terminal
+Run the program (python3 ...)	✅ Ubuntu Terminal
+Create folders (mkdir)	✅ Ubuntu Terminal
+I have one request
+
+Please send me a screenshot that shows:
+
+The left sidebar with the ACTDRS folders.
+The system_monitor.py file open.
+The Terminal at the bottom of VS Code.
+
+With that single screenshot, I can point to exactly where you should type code and where you should type commands. This will remove the confusion completely.
