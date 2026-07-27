@@ -1,0 +1,95 @@
+You should install only the official Python extension.
+
+✅ Install this extension
+
+Name: Python
+
+Publisher: Microsoft
+
+It looks like this:
+
+Python
+Publisher: Microsoft
+★★★★★
+100M+ Downloads
+
+This is the correct one.
+
+After that, I also recommend installing these extensions (in this order)
+1. Python ⭐⭐⭐⭐⭐ (Required)
+Python
+Publisher: Microsoft
+
+Purpose:
+
+Run Python programs
+Debug Python code
+Syntax highlighting
+IntelliSense (code suggestions)
+2. Pylance ⭐⭐⭐⭐⭐ (Required)
+Pylance
+Publisher: Microsoft
+
+Purpose:
+
+Auto-completion
+Error detection
+Better coding experience
+3. Jupyter ⭐⭐⭐⭐ (Optional for now)
+Jupyter
+Publisher: Microsoft
+
+Purpose:
+
+Data analysis
+Machine learning notebooks
+
+We don't need it immediately.
+
+4. GitHub Copilot (Optional)
+
+Don't install this now.
+
+We'll learn programming ourselves first.
+
+So your VS Code should have at least these two:
+✅ Python (Microsoft)
+
+✅ Pylance (Microsoft)
+How to install
+Open VS Code.
+Click the Extensions icon on the left (or press Ctrl + Shift + X).
+Search:
+Python
+Install the extension whose publisher is Microsoft.
+
+Then search:
+
+Pylance
+
+Install Pylance by Microsoft.
+
+After installation
+
+Restart VS Code.
+
+Open your project:
+
+cd ~/ACTDRS
+code .
+
+Then open cpu_monitor.py and click the ▶ Run button or use the terminal:
+
+python3 monitoring/cpu_monitor.py
+My recommendation
+
+Since this project (ACTDRS) will eventually include:
+
+Python
+AI (Machine Learning)
+Flask
+HTML/CSS
+JavaScript
+Git/GitHub
+
+I recommend we first configure VS Code properly. It takes about 5–10 minutes, but it will save you hours of troubleshooting later. We'll treat your setup like a professional development environment rather than just enough to get code running.
