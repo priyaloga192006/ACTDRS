@@ -1,0 +1,87 @@
+Where do I write code?
+
+There are two different places, and it's important to know the difference.
+
+1. Ubuntu Terminal 🖥️
+
+Use the terminal for commands like:
+
+cd ~/ACTDRS
+mkdir monitoring
+pip install flask
+python3 monitoring/cpu_monitor.py
+
+The terminal is for commands, not for writing Python programs.
+
+2. VS Code 💻
+
+Use VS Code to write Python code.
+
+Example:
+
+Open VS Code:
+
+code .
+
+Then in the left sidebar:
+
+ACTDRS
+│
+├── monitoring
+
+Right-click monitoring → New File
+
+Name it:
+
+cpu_monitor.py
+
+Then open that file and write:
+
+import psutil
+
+cpu = psutil.cpu_percent(interval=1)
+
+print(f"CPU Usage: {cpu}%")
+
+Save it (Ctrl + S).
+
+Then go back to the Terminal
+
+Run the file:
+
+python3 monitoring/cpu_monitor.py
+
+The terminal executes your program and shows the output.
+
+Think of it like Microsoft Word
+VS Code = where you write the document.
+Terminal = where you tell the computer to execute the program.
+
+You don't write your essay inside Command Prompt, and you don't run programs from inside a Word document. The same idea applies here.
+
+Our workflow for the ACTDRS project
+Ubuntu Terminal
+        │
+        ▼
+Open VS Code
+        │
+        ▼
+Write Python code
+        │
+        ▼
+Save the file
+        │
+        ▼
+Go back to Terminal
+        │
+        ▼
+Run the Python program
+        │
+        ▼
+See the output
+I have one question
+
+When you typed code ., did VS Code open successfully?
+
+Yes → Tell me "VS Code opened", and I'll guide you through creating your first Python file step by step.
+No → Tell me the exact error message or send a screenshot, and I'll help you fix it.
