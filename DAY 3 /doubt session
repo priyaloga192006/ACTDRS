@@ -1,0 +1,200 @@
+This is an excellent question, and it's exactly the kind of question a presentation judge might ask.
+
+The short answer is:
+
+Yes. A sophisticated attacker can try to stop your monitoring program. That is a real-world attack technique. However, professional security systems are designed to make that much harder.
+
+Let's break it down.
+
+Scenario 1: ACTDRS is just a normal Python program
+
+Suppose your program is running.
+
+ACTDRS (Python)
+       │
+Monitoring CPU
+Monitoring RAM
+Monitoring Processes
+
+A hacker gains administrator (root) access to your computer.
+
+They run:
+
+kill <process_id>
+
+or
+
+pkill python
+
+Your program stops.
+
+Result:
+
+ACTDRS ❌ Stopped
+
+Now it is no longer monitoring.
+
+So yes, this is possible.
+
+But real cybersecurity software doesn't rely on one program
+
+Products like:
+
+Microsoft Defender
+CrowdStrike Falcon
+SentinelOne
+Sophos
+Bitdefender
+
+don't run as ordinary Python scripts.
+
+They run as:
+
+Protected services
+Kernel drivers
+Background daemons
+Privileged processes
+
+That makes them much harder to terminate.
+
+How can we improve ACTDRS?
+
+We'll build it in stages.
+
+Level 1 (what you're building now)
+Python Script
+
+↓
+
+Monitoring
+
+Easy to stop.
+
+Level 2
+
+Run ACTDRS as a Linux service using systemd.
+
+Linux
+
+↓
+
+systemd
+
+↓
+
+ACTDRS
+
+If it crashes:
+
+ACTDRS stopped
+
+↓
+
+systemd notices
+
+↓
+
+Restart automatically
+
+Even if someone kills it, it comes back.
+
+Level 3
+
+A watchdog process.
+
+Watchdog
+
+↓
+
+ACTDRS
+
+If ACTDRS dies:
+
+Watchdog
+
+↓
+
+Restart ACTDRS
+
+Now an attacker has to defeat two processes.
+
+Level 4
+
+Multiple watchdogs.
+
+Watchdog A
+
+↓
+
+ACTDRS
+
+↑
+
+Watchdog B
+
+Each monitors the others.
+
+This makes stopping the system much harder.
+
+Level 5
+
+Remote monitoring.
+
+Your Computer
+
+↓
+
+Internet
+
+↓
+
+Cloud Server
+
+Even if ACTDRS is stopped locally, the cloud notices:
+
+"The endpoint stopped reporting."
+
+The administrator receives an alert.
+
+Can we make it impossible to stop?
+
+No.
+
+If an attacker has complete control of the operating system (full root/administrator privileges), they can eventually disable almost any software.
+
+The goal in cybersecurity is not to make attacks impossible. It's to:
+
+Detect them quickly.
+Slow the attacker down.
+Recover automatically.
+Alert administrators.
+For your ACTDRS project
+
+We can make it much more resilient by adding features like:
+
+Automatic restart if the monitor stops.
+Watchdog process that checks ACTDRS every few seconds.
+Password-protected shutdown so only authorized users can stop it through the application.
+Cloud heartbeat, where ACTDRS periodically reports "I'm alive." If the heartbeat stops, the owner is notified.
+Tamper detection, so if someone tries to modify or kill ACTDRS, it logs the event and raises an alert before shutting down (if it still has the opportunity).
+My recommendation
+
+For a college project, I would include:
+
+Threat Detected
+        │
+        ▼
+AI Analysis
+        │
+        ▼
+Decide Best Response
+        │
+        ├── Kill malicious process
+        ├── Block attacker IP
+        ├── Isolate the computer
+        ├── Save forensic evidence
+        ├── Notify the owner
+        └── If ACTDRS is stopped,
+            Watchdog restarts it automatically
+
+Adding a watchdog with automatic restart is realistic, demonstrates a real defensive technique, and makes your project much stronger without claiming it can never be disabled.
