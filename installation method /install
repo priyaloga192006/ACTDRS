@@ -1,0 +1,7 @@
+Where to install each thing
+Software	Where to install?	Command
+Ubuntu Update	✅ Ubuntu Terminal	sudo apt update
+pip	✅ Ubuntu Terminal	sudo apt install python3-pip
+Git	✅ Ubuntu Terminal	sudo apt install git
+Python packages (Flask, psutil, etc.)	✅ Ubuntu Terminal	pip3 install flask
+VS Code (Linux version)	✅ Ubuntu Terminal	sudo snap install code --classic
