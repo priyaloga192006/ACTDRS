@@ -1,0 +1,195 @@
+First, where are we now?
+
+You have completed:
+
+✅ Ubuntu installed
+
+✅ Python installed
+
+✅ VS Code installed
+
+✅ Virtual environment
+
+✅ psutil installed
+
+✅ system_monitor.py running
+
+✅ Continuous monitoring (while True)
+
+Your current ACTDRS looks like this:
+
+Computer
+     │
+     ▼
+Read CPU
+Read RAM
+Read Disk
+Read Processes
+     │
+     ▼
+Display Information
+
+It only displays information.
+
+Step 7 means: Add Detection Logic
+
+Right now your program says:
+
+CPU : 20%
+
+But ACTDRS should start thinking:
+
+CPU : 20%
+
+↓
+
+Normal
+
+↓
+
+Continue
+
+or
+
+CPU : 98%
+
+↓
+
+Danger!
+
+↓
+
+Generate Alert
+What do YOU physically do?
+Step 1
+
+Open
+
+monitoring/system_monitor.py
+
+You already have this open.
+
+Step 2
+
+Find this line:
+
+print(f"CPU Usage : {cpu}%")
+
+Immediately below it, add:
+
+if cpu > 90:
+    print("⚠ ALERT: High CPU Usage Detected!")
+
+Now find
+
+print(f"RAM Usage : {memory.percent}%")
+
+Below it add:
+
+if memory.percent > 90:
+    print("⚠ ALERT: High RAM Usage Detected!")
+
+Now find
+
+print(f"Disk Usage : {disk.percent}%")
+
+Below it add:
+
+if disk.percent > 95:
+    print("⚠ ALERT: Disk Almost Full!")
+Your code should look like this
+print(f"CPU Usage : {cpu}%")
+
+if cpu > 90:
+    print("⚠ ALERT: High CPU Usage Detected!")
+
+print(f"RAM Usage : {memory.percent}%")
+
+if memory.percent > 90:
+    print("⚠ ALERT: High RAM Usage Detected!")
+
+print(f"Disk Usage : {disk.percent}%")
+
+if disk.percent > 95:
+    print("⚠ ALERT: Disk Almost Full!")
+Save
+
+Press
+
+Ctrl + S
+Run
+
+In the terminal type
+
+python3 monitoring/system_monitor.py
+What happens?
+
+Suppose your CPU is
+
+18%
+
+Output
+
+CPU Usage : 18%
+
+Nothing else happens.
+
+Suppose your CPU becomes
+
+95%
+
+Output
+
+CPU Usage : 95%
+
+⚠ ALERT: High CPU Usage Detected!
+
+Now ACTDRS is not just monitoring.
+
+It is detecting abnormal behavior.
+
+Why are we doing this?
+
+Think like a human.
+
+You look at
+
+CPU = 95%
+
+Your brain says
+
+"Something is wrong."
+
+Now ACTDRS is learning to do the same thing.
+
+Important
+
+We are not using AI yet.
+
+We're only teaching ACTDRS simple rules.
+
+IF CPU > 90
+
+↓
+
+Alert
+
+This is called a rule-based detection engine.
+
+Later, AI will replace these fixed rules by learning patterns automatically.
+
+Today's goal
+
+Don't try to build the whole cybersecurity system today.
+
+Today's objective is only this:
+
+Monitoring
+      ↓
+Read CPU
+      ↓
+IF CPU > 90
+      ↓
+Print Alert
+
+Once this works, your ACTDRS has completed its first threat detection capability. Then we'll move to detecting suspicious processes, unusual network activity, and eventually let AI decide the best response.
