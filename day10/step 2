@@ -1,0 +1,131 @@
+Day 10 — Step 2: Network connection → Process
+
+Right now your output gives you:
+
+Source IP
+Source Port
+Destination IP
+Destination Port
+Status
+PID
+
+But we want ACTDRS to turn the PID into something meaningful:
+
+PID 1234
+   ↓
+Process: firefox
+1. Open
+ACTDRS/monitoring/network_monitor.py
+
+Replace the entire file with this:
+
+import psutil
+
+
+def get_process_name(pid):
+
+    if pid is None:
+        return "Unknown"
+
+    try:
+        process = psutil.Process(pid)
+        return process.name()
+
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
+
+
+def monitor_network_connections():
+
+    connections = psutil.net_connections(kind="inet")
+
+    print("\n===== NETWORK CONNECTIONS =====")
+
+    for connection in connections:
+
+        # Source
+        if connection.laddr:
+            source_ip = connection.laddr.ip
+            source_port = connection.laddr.port
+        else:
+            source_ip = "N/A"
+            source_port = "N/A"
+
+        # Destination
+        if connection.raddr:
+            destination_ip = connection.raddr.ip
+            destination_port = connection.raddr.port
+        else:
+            destination_ip = "N/A"
+            destination_port = "N/A"
+
+        # Process
+        pid = connection.pid
+        process_name = get_process_name(pid)
+
+        print("--------------------------------")
+        print(f"Process         : {process_name}")
+        print(f"PID             : {pid}")
+        print(f"Status          : {connection.status}")
+        print(f"Source IP       : {source_ip}")
+        print(f"Source Port     : {source_port}")
+        print(f"Destination IP  : {destination_ip}")
+        print(f"Destination Port: {destination_port}")
+
+Save with:
+
+Ctrl + S
+
+2. Run the test
+
+From ~/ACTDRS:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+You should now see something like:
+
+===== NETWORK CONNECTIONS =====
+
+--------------------------------
+Process         : firefox
+PID             : 1234
+Status          : ESTABLISHED
+Source IP       : 192.168.1.5
+Source Port     : 52144
+Destination IP  : 142.250.x.x
+Destination Port: 443
+
+Some connections may show:
+
+Process         : Unknown
+PID             : None
+
+That's not necessarily an error. Linux can restrict access to information about processes owned by another user or system process.
+
+Why this matters for ACTDRS
+
+We're moving from:
+
+Network connection
+
+to:
+
+Network connection + process
+
+So eventually ACTDRS can reason about something like:
+
+firefox
+   ↓
+192.168.1.5:52144
+   ↓
+142.x.x.x:443
+   ↓
+HTTPS
+
+rather than just seeing an unexplained IP address.
+
+Don't add AI detection yet.
+
+We first need to collect clean network data. Detection comes after collection.
+
+Run the command and, if the output looks correct, tell me “done”. Then we'll do Step 3: classify TCP/UDP connections and identify suspicious connection patterns.
