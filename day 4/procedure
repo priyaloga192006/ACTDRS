@@ -1,0 +1,227 @@
+Step 1: Create a New Folder
+Inside your project (ACTDRS), create a new folder:
+
+detection
+
+Your project becomes:
+
+ACTDRS/
+
+monitoring/
+
+detection/
+
+response/
+
+dashboard/
+
+logs/
+
+config/
+
+ai/
+Step 2: Create a New File
+
+Inside the detection folder, create:
+
+threat_detector.py
+
+Your structure:
+
+detection/
+
+└── threat_detector.py
+Step 3: Open threat_detector.py
+
+Delete everything if it contains anything.
+
+Paste this code:
+
+def detect_cpu(cpu):
+
+    if cpu > 90:
+        return "HIGH"
+
+    return "NORMAL"
+
+
+def detect_ram(ram):
+
+    if ram > 90:
+        return "HIGH"
+
+    return "NORMAL"
+
+
+def detect_disk(disk):
+
+    if disk > 95:
+        return "HIGH"
+
+    return "NORMAL"
+
+Save it.
+
+Stop Here!
+
+Don't run anything yet.
+
+Why?
+
+This file is not a complete program.
+
+It is a helper module.
+
+Think of it like this:
+
+system_monitor.py
+        │
+        ▼
+asks
+
+threat_detector.py
+
+↓
+
+"CPU = 95"
+
+↓
+
+Answer:
+
+"HIGH"
+
+It doesn't work by itself.
+
+What is a Function?
+
+You just created three functions.
+
+Example:
+
+def detect_cpu(cpu):
+
+This means:
+
+"Whenever someone gives me a CPU value, I'll decide whether it's normal or high."
+
+Example:
+
+Input
+
+95
+
+↓
+
+detect_cpu()
+
+↓
+
+Output
+
+HIGH
+Real Example
+
+Suppose tomorrow we read:
+
+CPU = 25%
+
+ACTDRS asks:
+
+detect_cpu(25)
+
+The function replies:
+
+NORMAL
+
+If:
+
+detect_cpu(97)
+
+The reply is:
+
+HIGH
+Why separate files?
+
+You might wonder:
+
+"Why not write this inside system_monitor.py?"
+
+Good question.
+
+Imagine later we add:
+
+100 CPU rules
+200 RAM rules
+300 Network rules
+AI prediction
+Malware detection
+
+If everything is in one file:
+
+system_monitor.py
+
+3000 lines
+
+Impossible to manage.
+
+Instead:
+
+monitoring/
+
+↓
+
+Collect Data
+
+detection/
+
+↓
+
+Analyze Data
+
+response/
+
+↓
+
+Take Action
+
+ai/
+
+↓
+
+AI Decision
+
+Each folder has one responsibility.
+
+This is how professional cybersecurity software is organized.
+
+Today's Task
+
+Complete only these two things:
+
+✅ Create:
+
+detection/
+
+✅ Create:
+
+threat_detector.py
+
+✅ Paste the code exactly as shown.
+
+Do not modify system_monitor.py yet.
+
+In the next step, we'll connect:
+
+system_monitor.py
+        │
+        ▼
+threat_detector.py
+        │
+        ▼
+HIGH / NORMAL
+        │
+        ▼
+Print Alert
+
+That's when your ACTDRS will truly become a Threat Detection Engine instead of just a monitoring tool.
