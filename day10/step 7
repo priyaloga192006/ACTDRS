@@ -1,0 +1,130 @@
+Step 7: record suspicious network activity as a security event.
+
+Right now you have:
+
+Network connection
+      ↓
+Destination port
+      ↓
+detect_suspicious_port()
+      ↓
+NORMAL / SUSPICIOUS
+
+But there is a problem: the result is only printed. ACTDRS should record a suspicious event in the database.
+
+Day 10 — Step 7
+1. Open monitoring/network_monitor.py
+
+At the top, change your database import to include insert_security_event.
+
+If you currently have:
+
+from database.database_manager import insert_network_event
+
+change it to:
+
+from database.database_manager import insert_network_event, insert_security_event
+
+You should also already have:
+
+from detection.threat_detector import detect_suspicious_port
+2. Find this part
+
+You currently have:
+
+port_status = detect_suspicious_port(destination_port)
+
+print(f"Port Status     : {port_status}")
+
+Immediately after that, add:
+
+if port_status == "SUSPICIOUS":
+
+    insert_security_event(
+        "SUSPICIOUS_PORT",
+        "MEDIUM",
+        f"Suspicious destination port detected: {destination_port}",
+        "CHECK_NETWORK"
+    )
+
+    print("⚠ Security event recorded!")
+
+So it becomes:
+
+port_status = detect_suspicious_port(destination_port)
+
+print(f"Port Status     : {port_status}")
+
+if port_status == "SUSPICIOUS":
+
+    insert_security_event(
+        "SUSPICIOUS_PORT",
+        "MEDIUM",
+        f"Suspicious destination port detected: {destination_port}",
+        "CHECK_NETWORK"
+    )
+
+    print("⚠ Security event recorded!")
+
+Save with:
+
+Ctrl + S
+
+3. Don't immediately run the entire ACTDRS
+
+First check that Python accepts the file:
+
+python3 -m py_compile monitoring/network_monitor.py
+If there is no output
+
+That's good. It means there is no syntax error.
+
+Then run:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+Let it run for a while, then:
+
+Ctrl + C
+
+4. Check the security events database
+
+Run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events ORDER BY id DESC LIMIT 10').fetchall()); c.close()"
+
+If a suspicious port was detected, you should see something similar to:
+
+('SUSPICIOUS_PORT', 'MEDIUM', 'Suspicious destination port detected: 4444', 'CHECK_NETWORK')
+
+The exact timestamp/ID will be different.
+
+⚠️ Important
+
+There is a possibility that your current insert_security_event() function has a slightly different parameter order or name because we've built the project step-by-step.
+
+If you get an error at this step, don't change random code. Send me the error or show me your database_manager.py, and I'll adjust the call to your actual function.
+
+After this step
+
+Your ACTDRS architecture becomes:
+
+Network Monitor
+      ↓
+Collect connection
+      ↓
+Destination Port
+      ↓
+Threat Detector
+      ↓
+NORMAL / SUSPICIOUS
+      ↓
+      ├── NORMAL → continue monitoring
+      │
+      └── SUSPICIOUS
+             ↓
+       Security Event
+             ↓
+          SQLite
+
+Do Step 7 now. Run the py_compile command first, then the monitor.
