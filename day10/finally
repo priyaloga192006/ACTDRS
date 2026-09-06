@@ -1,0 +1,77 @@
+Good. If Step 7 ran without errors, we're at the point where we should stop adding features temporarily and verify the whole Day 10 network pipeline.
+
+Day 10 status
+
+So far:
+
+✅ Network connections collected
+✅ Source IP / source port collected
+✅ Destination IP / destination port collected
+✅ PID and process name collected
+✅ TCP/UDP identified
+✅ Suspicious-port detection added
+✅ Suspicious-port event logging added
+Day 10 — Step 8: Verify the complete pipeline
+
+Run this from:
+
+/home/priya/ACTDRS
+python3 -m py_compile monitoring/network_monitor.py detection/threat_detector.py database/database_manager.py
+If it prints nothing
+
+That's success. No syntax errors.
+
+Then run:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+Let it run for a few seconds and press:
+
+Ctrl + C
+
+Then check the database:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); rows=c.execute('SELECT id,timestamp,event_type,severity,description,decision FROM security_events ORDER BY id DESC LIMIT 10').fetchall(); [print(row) for row in rows]; c.close()"
+What we're looking for
+
+You should see your earlier events:
+
+HIGH_CPU
+TEST_EVENT
+NETWORK_CONNECTION
+
+If a suspicious port happened to be detected, you may also see:
+
+SUSPICIOUS_PORT
+
+Don't worry if SUSPICIOUS_PORT doesn't appear. Your machine may simply not have a connection to one of the ports we've classified as suspicious.
+
+One correction before we call Day 10 finished
+
+Our current suspicious-port rule is a basic heuristic, not an AI model and not proof of an attack.
+
+That's intentional.
+
+The next improvement should be to combine multiple signals rather than declaring an attack from a port alone:
+
+Suspicious port
+      +
+Unexpected process
+      +
+External destination
+      +
+Repeated connections
+      +
+Abnormal behavior
+      ↓
+Risk score
+      ↓
+Decision
+
+That will make ACTDRS substantially more defensible as a cybersecurity project.
+
+For now
+
+Run the three commands above.
+
+If all three work, Day 10's basic network-monitoring stage is complete, and we'll start Day 11: network behavior analysis and risk scoring.
