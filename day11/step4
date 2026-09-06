@@ -1,0 +1,152 @@
+Day 11 — Step 4: Connect Network Risk Analysis → Security Events
+
+The goal is to make ACTDRS do this automatically:
+
+Network connection → inspect → calculate risk → if suspicious/high → create security event → save to database
+
+Your current monitor already calculates:
+
+Risk Score
+Risk Level
+Risk Reasons
+
+But we need to make the result actually trigger a security event.
+
+Step 4A — Open network_monitor.py
+
+Open:
+
+ACTDRS/monitoring/network_monitor.py
+
+You already have this import:
+
+from database.database_manager import insert_network_event, insert_security_event
+
+Keep it.
+
+Step 4B — Find this section
+
+You should have something similar to:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    connection.status,
+    process_name,
+    destination_ip,
+    destination_port
+)
+
+Immediately after that, add:
+
+if risk_level == "HIGH":
+
+    insert_security_event(
+        "HIGH_NETWORK_RISK",
+        "HIGH",
+        f"Network risk detected: {reasons}",
+        "INVESTIGATE_CONNECTION"
+    )
+
+    print("⚠ HIGH NETWORK RISK SECURITY EVENT RECORDED!")
+
+So the section becomes:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    connection.status,
+    process_name,
+    destination_ip,
+    destination_port
+)
+
+if risk_level == "HIGH":
+
+    insert_security_event(
+        "HIGH_NETWORK_RISK",
+        "HIGH",
+        f"Network risk detected: {reasons}",
+        "INVESTIGATE_CONNECTION"
+    )
+
+    print("⚠ HIGH NETWORK RISK SECURITY EVENT RECORDED!")
+
+print(f"Risk Score       : {risk_score}")
+print(f"Risk Level       : {risk_level}")
+print(f"Risk Reasons     : {reasons}")
+Why are we doing this?
+
+Right now your system can say:
+
+Risk Score : 70
+Risk Level : HIGH
+
+But that's only analysis.
+
+After this change, ACTDRS can also create:
+
+security_events
+        ↓
+HIGH_NETWORK_RISK
+        ↓
+HIGH severity
+        ↓
+INVESTIGATE_CONNECTION
+
+That is the beginning of the detection → decision → logging pipeline.
+
+Step 4C — Save
+
+Press:
+
+Ctrl + S
+
+Then run:
+
+python3 -m monitoring.network_monitor
+
+Let it run for around 10–20 seconds.
+
+Then:
+
+Ctrl + C
+Step 4D — Check security events
+
+Run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events ORDER BY id DESC LIMIT 10').fetchall()); c.close()"
+
+If the risk analyzer encounters a HIGH-risk connection, you should eventually see something resembling:
+
+(
+  5,
+  '2026-09-06 11:00:20',
+  'HIGH_NETWORK_RISK',
+  'HIGH',
+  "Network risk detected: ['Suspicious destination port']",
+  'INVESTIGATE_CONNECTION'
+)
+
+Your actual values will be different.
+
+One important point
+
+Don't try to force a HIGH-risk result yet. Your normal Firefox HTTPS connection to port 443 producing:
+
+Risk Score : 20
+Risk Level : LOW
+
+is perfectly fine.
+
+We first verify that the pipeline works. Then we'll deliberately create a test condition to prove that a HIGH event gets generated.
+
+Your immediate task
+
+Run these in order:
+
+python3 -m monitoring.network_monitor
+
+→ wait 10–20 seconds → Ctrl+C
+
+Then:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events ORDER BY id DESC LIMIT 10').fetchall()); c.close()"
+
+Send me that output. Then we'll do Day 11 — Step 5: deliberately trigger a suspicious network event and verify ACTDRS detects it automatically.
