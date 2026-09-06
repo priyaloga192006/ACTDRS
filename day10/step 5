@@ -1,0 +1,82 @@
+Now we move to Day 10 — Step 5: build the first network threat-detection rule.
+
+Right now ACTDRS is doing:
+
+Network connections
+      ↓
+Collect information
+      ↓
+Store in database
+
+Next:
+
+Network connection
+      ↓
+Analyze
+      ↓
+Suspicious or normal?
+Step 5 — Detect suspicious destination ports
+
+Open:
+
+ACTDRS/detection/threat_detector.py
+
+At the bottom, add:
+
+def detect_suspicious_port(destination_port):
+
+    suspicious_ports = [
+        21,    # FTP
+        23,    # Telnet
+        25,    # SMTP
+        135,   # Windows RPC
+        139,   # NetBIOS
+        445,   # SMB
+        1433,  # MSSQL
+        3306,  # MySQL
+        3389,  # RDP
+        4444   # Common pentesting/backdoor port
+    ]
+
+    if destination_port in suspicious_ports:
+        return "SUSPICIOUS"
+
+    return "NORMAL"
+
+Save with Ctrl + S.
+
+Then test it
+
+Run:
+
+python3 -c "from detection.threat_detector import detect_suspicious_port; print(detect_suspicious_port(4444)); print(detect_suspicious_port(443))"
+
+Expected:
+
+SUSPICIOUS
+NORMAL
+Important SOC concept
+
+Don't make the mistake of thinking:
+
+"Port 3389 = attack."
+
+That's false.
+
+A port being associated with a commonly abused service doesn't prove an attack. We're only creating a signal. Later ACTDRS will combine multiple signals:
+
+Suspicious port
+      +
+Unexpected process
+      +
+Unusual destination
+      +
+Repeated connections
+      ↓
+Risk score
+      ↓
+AI decision
+
+That is much closer to how a useful detection system should work.
+
+Do this test first. Once you get SUSPICIOUS and NORMAL, we'll connect this rule to the network monitor.
