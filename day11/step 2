@@ -1,0 +1,176 @@
+Day 11 — Step 2: Connect Risk Analyzer to Network Monitor
+
+Your current architecture is roughly:
+
+Network Monitor
+      ↓
+Network Connection Data
+      ↓
+Risk Analyzer
+      ↓
+Risk Score + Risk Level + Reasons
+
+Right now, you have tested the Risk Analyzer independently.
+
+Now we make the actual network_monitor.py send each network connection to the analyzer.
+
+Step 1 — Open
+
+In VS Code:
+
+ACTDRS
+ └── analyzer
+      └── network_analyzer.py
+
+Make sure your analyzer contains the function you just tested, something like:
+
+def calculate_network_risk(
+    status,
+    process_name,
+    destination_ip,
+    destination_port
+):
+    ...
+
+Don't change it yet.
+
+Step 2 — Open network_monitor.py
+
+You already have this file:
+
+monitoring/
+    network_monitor.py
+
+At the top of the file, add:
+
+from analyzer.network_analyzer import calculate_network_risk
+
+So your imports should include the risk analyzer.
+
+Step 3 — Find this section
+
+You already have:
+
+process_name = get_process_name(pid)
+
+insert_network_event(
+    process_name,
+    pid,
+    protocol,
+    connection.status,
+    source_ip,
+    source_port,
+    destination_ip,
+    destination_port
+)
+
+Immediately after this, add:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    connection.status,
+    process_name,
+    destination_ip,
+    destination_port
+)
+
+Then print the result:
+
+print(f"Risk Score       : {risk_score}")
+print(f"Risk Level       : {risk_level}")
+print(f"Risk Reasons     : {reasons}")
+Step 4 — Your flow should now look like this
+process_name = get_process_name(pid)
+
+insert_network_event(
+    process_name,
+    pid,
+    protocol,
+    connection.status,
+    source_ip,
+    source_port,
+    destination_ip,
+    destination_port
+)
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    connection.status,
+    process_name,
+    destination_ip,
+    destination_port
+)
+
+print(f"Risk Score       : {risk_score}")
+print(f"Risk Level       : {risk_level}")
+print(f"Risk Reasons     : {reasons}")
+Why are we doing this?
+
+Before:
+
+network_monitor.py
+       ↓
+network information
+       ↓
+database
+
+After:
+
+network_monitor.py
+       ↓
+network information
+       ↓
+network_analyzer.py
+       ↓
+risk score
+       ↓
+LOW / MEDIUM / HIGH
+       ↓
+later → AI decision
+       ↓
+later → response
+       ↓
+database
+
+This is an important step because we're moving from just monitoring network connections toward actual threat analysis.
+
+Step 5 — Run it
+
+From:
+
+~/ACTDRS
+
+run:
+
+python3 -m monitoring.network_monitor
+
+Let it run for a few seconds.
+
+You should start seeing something similar to:
+
+--------------------------------
+Process        : firefox
+PID            : 1234
+Status         : ESTABLISHED
+Source IP      : ...
+Source Port    : ...
+Destination IP : ...
+Destination Port: 443
+
+Risk Score     : 20
+Risk Level     : LOW
+Risk Reasons   : ['External destination']
+
+Your exact values will be different. That's expected.
+
+Important
+
+Don't try to create an actual cyberattack just to produce a HIGH score. For now, we're testing the pipeline with the network connections your system naturally produces.
+
+Do only this Step 2 now.
+
+Run:
+
+python3 -m monitoring.network_monitor
+
+and send me the output/screenshot.
+
+Then I'll check whether Day 11 Step 2 is correct before we move to Step 3.
