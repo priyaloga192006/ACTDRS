@@ -1,0 +1,41 @@
+Day 11 — Step 3: Verify network events are actually stored in SQLite
+
+Now we need to confirm that network_monitor.py isn't just printing the information — it is persisting it in actdrs.db.
+
+Stop the monitor first with:
+
+Ctrl + C
+
+Then, from:
+
+~/ACTDRS
+
+run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM network_events ORDER BY id DESC LIMIT 10').fetchall()); c.close()"
+What we're checking
+
+We want to see rows containing things like:
+
+process_name
+PID
+protocol
+status
+source_ip
+source_port
+destination_ip
+destination_port
+
+For example:
+
+[
+ ('firefox', 1234, 'TCP', 'ESTABLISHED',
+  '192.168.1.5', 45678,
+  '142.250.72.14', 443)
+]
+
+Your actual output will be different.
+
+Don't modify any code yet.
+
+Run that command and send me the output. I'll verify Day 11 Step 3, then we'll move to Step 4.
