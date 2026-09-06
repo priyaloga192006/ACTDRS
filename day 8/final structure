@@ -1,0 +1,245 @@
+What is Day 8?
+
+Day 8 is saving information permanently.
+
+Think of it like a notebook.
+
+Suppose you write:
+
+10:00 AM
+CPU = 20%
+Decision = NORMAL
+
+Next scan:
+
+10:00:03 AM
+CPU = 95%
+Decision = POSSIBLE_ATTACK
+
+Next scan:
+
+10:00:06 AM
+CPU = 22%
+Decision = NORMAL
+
+Instead of writing in a notebook, ACTDRS writes this into a database.
+
+What is a Database?
+
+Think about WhatsApp.
+
+When someone sends you a message, where is it stored?
+
+Not in RAM.
+
+It is stored in a database.
+
+Instagram stores:
+
+Users
+Posts
+Comments
+
+Banks store:
+
+Account numbers
+Transactions
+Balance
+
+Hospitals store:
+
+Patient name
+Diagnosis
+
+Our ACTDRS will store:
+
+Time	CPU	RAM	Disk	Decision
+10:00	22	31	40	NORMAL
+10:03	95	92	41	POSSIBLE_ATTACK
+10:06	20	30	41	NORMAL
+Why SQLite?
+
+Python already supports SQLite.
+
+No installation of MySQL or PostgreSQL is needed.
+
+It creates one file:
+
+actdrs.db
+
+Inside this single file, all your logs are stored.
+
+What is database_manager.py?
+
+Think of it as the database controller.
+
+It has only two jobs.
+
+Job 1
+
+Create the database.
+
+If database doesn't exist
+
+↓
+
+Create it
+
+Python function:
+
+create_database()
+
+You call this only once.
+
+Job 2
+
+Store data.
+
+Every scan:
+
+CPU = 20
+
+RAM = 30
+
+Disk = 40
+
+Decision = NORMAL
+
+↓
+
+Store it.
+
+Python function:
+
+insert_log(cpu, ram, disk, decision)
+Why not put database code inside system_monitor.py?
+
+Imagine this:
+
+system_monitor.py
+
+500 lines
+
+Database code
+
+200 lines
+
+AI code
+
+300 lines
+
+Response code
+
+200 lines
+
+Total:
+
+1200 lines
+
+Impossible to manage.
+
+Instead we separate everything.
+
+system_monitor.py
+
+↓
+
+Calls
+
+↓
+
+database_manager.py
+
+This is called modular programming.
+
+Professional software is written this way.
+
+What will happen every 3 seconds?
+
+Current:
+
+Scan
+
+↓
+
+Print
+
+↓
+
+Forget
+
+New:
+
+Scan
+
+↓
+
+AI Decision
+
+↓
+
+Store in Database
+
+↓
+
+Print
+
+↓
+
+Repeat
+Think like a judge
+
+Suppose I'm an SIH judge.
+
+I ask:
+
+Yesterday your ACTDRS detected an attack.
+
+Show me the evidence.
+
+Without a database:
+
+Sorry...
+
+I don't have it.
+
+Project score ↓
+
+With a database:
+
+Time:
+2026-08-04 10:25:13
+
+CPU:
+95%
+
+RAM:
+91%
+
+Decision:
+POSSIBLE_ATTACK
+
+Project score ↑
+
+Today's Goal
+
+We are not building AI today.
+
+We are not changing detection.
+
+We are only adding memory to ACTDRS.
+
+Here's how we'll do it
+
+We'll break Day 8 into small tasks instead of doing everything at once:
+
+Part 1 (5 minutes)
+Create the database folder (you've already done this).
+Part 2 (10 minutes)
+Create database_manager.py.
+I'll explain every line before you type it.
+Part 3 (10 minutes)
+Test only the database.
+Don't touch system_monitor.py yet.
+Part 4 (10 minutes)
+Connect the database to system_monitor.py.
