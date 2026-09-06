@@ -1,0 +1,264 @@
+https://chatgpt.com/backend-api/estuary/content?id=file_00000000ee148211ad61de6252faf076&ts=496851&p=fs&cid=1&sig=18da63f70e819fd52066cfa584ba7ccc7f8e9403fba914b2c5b4539cfe5e3697&v=0
+looked carefully at your screenshot. Not quite yet. There is one important indentation/placement problem.
+
+What happened?
+
+You currently have:
+
+def insert_log(cpu,ram,disk,decision):
+def create_security_events_table():
+
+The insert_log() function has no body, because you placed create_security_events_table() immediately after it.
+
+Also, the old insert_log() code starting around line 39 has accidentally become part of create_security_events_table().
+
+So if we run this now, Python will give an indentation/syntax error.
+
+Let's fix it cleanly
+
+Because the file is still small, the safest option is to replace the entire database_manager.py with the correct version.
+
+Step 1
+
+Open:
+
+ACTDRS → database → database_manager.py
+
+Delete everything inside it.
+
+Step 2
+
+Paste this exact code:
+
+import sqlite3
+from datetime import datetime
+
+DB_NAME = "actdrs.db"
+
+
+def create_database():
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS system_logs(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            cpu REAL,
+            ram REAL,
+            disk REAL,
+            decision TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def insert_log(cpu, ram, disk, decision):
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO system_logs
+        (timestamp, cpu, ram, disk, decision)
+        VALUES (?, ?, ?, ?, ?)
+    """,
+    (timestamp, cpu, ram, disk, decision))
+
+    conn.commit()
+    conn.close()
+
+
+def create_security_events_table():
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS security_events(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            event_type TEXT,
+            severity TEXT,
+            description TEXT,
+            decision TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+Step 3
+
+Press:
+
+Ctrl + S
+
+Your file should now have this structure
+create_database()
+    ↓
+create system_logs table
+
+insert_log()
+    ↓
+insert monitoring data
+
+create_security_events_table()
+    ↓
+create security_events table
+
+Most importantly, notice that each def has its own indented body:
+
+def insert_log(...):
+    ...
+    ...
+    ...
+
+
+def create_security_events_table():
+    ...
+    ...
+    ...
+
+There must be a blank line between the functions, and create_security_events_table() must NOT appear immediately after def insert_log(...) before its code.
+
+Step 4 — Don't modify system_monitor.py
+
+Leave it exactly as it is.
+
+Now run only this test in your Ubuntu terminal:
+
+python3 -c "from database.database_manager import create_security_events_table; create_security_events_table(); print('Security events table created successfully')"
+Expected:
+Security events table created successfully
+
+Stop there after running it and send me the output. Then we'll verify that the new security_events table actually exists in your database.
+https://chatgpt.com/backend-api/estuary/content?id=file_00000000c1a08211893a36c0a8d92ea6&ts=496851&p=fs&cid=1&sig=934fd18ba59d5a6c33afcfeb90893fbc7767fbd3886f87e4d8c9ee7bff11c130&v=0
+https://chatgpt.com/backend-api/estuary/content?id=file_00000000c1a08211893a36c0a8d92ea6&ts=496851&p=fs&cid=1&sig=934fd18ba59d5a6c33afcfeb90893fbc7767fbd3886f87e4d8c9ee7bff11c130&v=0
+https://chatgpt.com/backend-api/estuary/content?id=file_000000005044821181a1a873de5cf541&ts=496851&p=fs&cid=1&sig=bfecd8fccb564a45217d3f29f43916399a5a3830d3c20d4c8475cb49ea5a2db4&v=0
+Yes, I can see the error. Don't worry — you did not break the project. Your previous test already proved that the security_events table was successfully created.
+
+The unusual part is this error:
+
+sqlite3.OperationalError: no such table: sqlite_master
+
+SQLite normally has sqlite_master automatically, so instead of fighting with that query, let's use a simpler and more direct verification.
+
+Do this now
+
+You are already in:
+
+/home/priya/ACTDRS
+
+Run only this command:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT name FROM main.sqlite_master').fetchall()); c.close()"
+Expected result
+
+You should see something like:
+
+[('system_logs',), ('security_events',)]
+
+If you get that, we'll know for certain that both tables exist.
+
+Don't change any code. Don't run ACTDRS again yet.
+
+Run that one command and send me the output.
+https://chatgpt.com/backend-api/estuary/content?id=file_00000000068c8211b7b4bd4d71850b1e&ts=496851&p=fs&cid=1&sig=1f0cd829523e255f8fe41996697da312778531b5c6b7967b4a61f0fed3280711&v=0
+Perfect. ✅ Now we have confirmed it.
+
+Your output is:
+
+[('system_logs',), ('sqlite_sequence',), ('security_events',)]
+
+The important part is:
+
+'system_logs'
+'security_events'
+
+So both tables exist in actdrs.db.
+
+sqlite_sequence is normal — SQLite creates it automatically when using AUTOINCREMENT. You don't need to worry about it.
+
+Current Day 9 status
+actdrs.db
+   │
+   ├── system_logs       ✅
+   │
+   └── security_events   ✅
+
+But security_events is currently empty. We have created the table; next we need to create the function that puts security events into it.
+
+Day 9 — Step 3: Create insert_security_event()
+
+Open:
+
+VS Code → ACTDRS → database → database_manager.py
+
+Go to the very bottom of the file.
+
+Add this function after create_security_events_table():
+
+def insert_security_event(event_type, severity, description, decision):
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO security_events
+        (timestamp, event_type, severity, description, decision)
+        VALUES (?, ?, ?, ?, ?)
+    """,
+    (timestamp, event_type, severity, description, decision))
+
+    conn.commit()
+    conn.close()
+
+Your file should now have three database functions:
+
+create_database()
+        ↓
+system_logs table
+
+
+insert_log()
+        ↓
+stores CPU/RAM/Disk information
+
+
+create_security_events_table()
+        ↓
+security_events table
+
+
+insert_security_event()
+        ↓
+stores security events
+Step 4 — Save
+
+Press:
+
+Ctrl + S
+
+Don't modify system_monitor.py yet.
+
+Step 5 — Test the new function
+
+In your Ubuntu terminal, run this exact command:
+
+python3 -c "from database.database_manager import create_security_events_table, insert_security_event; create_security_events_table(); insert_security_event('TEST_EVENT', 'LOW', 'Testing security event logging', 'NORMAL'); print('Security event inserted successfully')"
+Expected output:
+Security event inserted successfully
+
+If you get that message, we've successfully written our first security event into the database.
+
+Stop after this.
+
+Send me the terminal output. Then we'll check the actual database and see whether the event was really stored.
+
