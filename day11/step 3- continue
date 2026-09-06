@@ -1,0 +1,103 @@
+Day 11 — Step 3A: Create network_events
+
+Open:
+
+database/database_manager.py
+
+You already have create_security_events_table() there.
+
+Add this function below it:
+
+def create_network_events_table():
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS network_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            process_name TEXT,
+            pid INTEGER,
+            protocol TEXT,
+            status TEXT,
+            source_ip TEXT,
+            source_port INTEGER,
+            destination_ip TEXT,
+            destination_port INTEGER
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+Then save with:
+
+Ctrl + S
+Step 3B: Create the table
+
+In your terminal, from ~/ACTDRS, run:
+
+python3 -c "from database.database_manager import create_network_events_table; create_network_events_table(); print('network_events table created successfully')"
+
+You should get:
+
+network_events table created successfully
+Step 3C: Verify the table
+
+Then run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute(\"SELECT name FROM main.sqlite_master WHERE type='table'\").fetchall()); c.close()"
+
+You should now see something similar to:
+
+[('system_logs',), ('sqlite_sequence',), ('security_events',), ('network_events',)]
+
+Don't run the network monitor again yet.
+
+Send me the output of Step 3B and Step 3C. Then we'll make sure network_monitor.py actually inserts its detected connections into this newly created table.
+And the verification shows:
+
+('system_logs',)
+('sqlite_sequence',)
+('security_events',)
+('network_events',)
+
+So the network_events table now exists. ✅
+
+Next: Step 3D — Test that network data is inserted
+
+Run your network monitor again:
+
+python3 -m monitoring.network_monitor
+
+Let it run for about 10–20 seconds so it can collect several connections.
+
+Then stop it:
+
+Ctrl + C
+
+Now run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM network_events ORDER BY id DESC LIMIT 10').fetchall()); c.close()"
+What we want to see
+
+You should get rows similar to:
+
+[(1, '2026-09-06 10:50:12', 'firefox', 3775, 'TCP',
+  'ESTABLISHED', '10.0.2.15', 48294,
+  '140.82.114.26', 443)]
+
+Your actual values will obviously be different.
+
+Important: If you get an error such as:
+
+no such table: network_events
+
+or:
+
+[]
+
+don't change anything yourself. Send me the output.
+
+If you get rows, Day 11 Step 3 is complete, and we'll move to the next step: connecting the risk analyzer → security-event system, which is where ACTDRS starts becoming an actual threat-detection pipeline rather than separate scripts.
