@@ -1,0 +1,195 @@
+Day 10 — Step 3: Network Protocol & Connection Classification
+
+Your current output has:
+
+Process
+PID
+Status
+Source IP
+Source Port
+Destination IP
+Destination Port
+
+But psutil.net_connections(kind="inet") doesn't directly give us a simple "TCP" or "UDP" field.
+
+We'll determine it from the socket type.
+
+1. Open
+ACTDRS/monitoring/network_monitor.py
+
+Add this function above monitor_network_connections():
+
+def get_protocol(connection):
+
+    if connection.type == 1:
+        return "TCP"
+
+    elif connection.type == 2:
+        return "UDP"
+
+    else:
+        return "UNKNOWN"
+
+Your file should now contain:
+
+import psutil
+
+
+def get_process_name(pid):
+
+    if pid is None:
+        return "Unknown"
+
+    try:
+        process = psutil.Process(pid)
+        return process.name()
+
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
+
+
+def get_protocol(connection):
+
+    if connection.type == 1:
+        return "TCP"
+
+    elif connection.type == 2:
+        return "UDP"
+
+    else:
+        return "UNKNOWN"
+
+
+def monitor_network_connections():
+
+    connections = psutil.net_connections(kind="inet")
+
+    print("\n===== NETWORK CONNECTIONS =====")
+
+    for connection in connections:
+
+        if connection.laddr:
+            source_ip = connection.laddr.ip
+            source_port = connection.laddr.port
+        else:
+            source_ip = "N/A"
+            source_port = "N/A"
+
+        if connection.raddr:
+            destination_ip = connection.raddr.ip
+            destination_port = connection.raddr.port
+        else:
+            destination_ip = "N/A"
+            destination_port = "N/A"
+
+        pid = connection.pid
+
+        process_name = get_process_name(pid)
+
+        protocol = get_protocol(connection)
+
+        print("--------------------------------")
+        print(f"Process         : {process_name}")
+        print(f"PID             : {pid}")
+        print(f"Protocol        : {protocol}")
+        print(f"Status          : {connection.status}")
+        print(f"Source IP       : {source_ip}")
+        print(f"Source Port     : {source_port}")
+        print(f"Destination IP  : {destination_ip}")
+        print(f"Destination Port: {destination_port}")
+
+Save:
+
+Ctrl + S
+
+2. Test it
+
+From:
+
+~/ACTDRS
+
+run:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+Now you should see:
+
+===== NETWORK CONNECTIONS =====
+
+--------------------------------
+Process         : firefox
+PID             : 1234
+Protocol        : TCP
+Status          : ESTABLISHED
+Source IP       : 192.168.1.5
+Source Port     : 52341
+Destination IP  : 142.x.x.x
+Destination Port: 443
+
+You may also see:
+
+Protocol        : UDP
+
+or:
+
+Status          : LISTEN
+
+or:
+
+Destination IP  : N/A
+Destination Port: N/A
+
+Those are all possible and don't automatically indicate an attack.
+
+Why we're doing this
+
+ACTDRS is gradually building a network event like:
+
+┌──────────────────────────────┐
+│       NETWORK EVENT          │
+├──────────────────────────────┤
+│ Process: firefox             │
+│ PID: 1234                    │
+│ Protocol: TCP                │
+│ Status: ESTABLISHED          │
+│ Source IP: 192.168.1.5       │
+│ Source Port: 52341           │
+│ Destination IP: 142.x.x.x    │
+│ Destination Port: 443        │
+└──────────────────────────────┘
+
+This is much more useful for a SOC than simply recording:
+
+CPU = 95%
+⚠️ One important correction
+
+Don't call this AI threat detection yet.
+
+At this stage ACTDRS is doing:
+
+Collection → Identification → Classification
+
+It is not yet determining whether a network connection is malicious.
+
+Later we'll add rules such as:
+
+Unusual destination
+        +
+Unusual port
+        +
+Unexpected process
+        +
+Repeated connections
+        ↓
+Suspicious network behavior
+
+Then that information can feed your decision engine.
+
+Your task now
+Add get_protocol().
+Save.
+Run:
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+Check that you see Protocol: TCP/UDP.
+
+Once that works, Day 10 — Step 4 will be connecting network monitoring to the ACTDRS security-event database.
