@@ -1,0 +1,200 @@
+Current Features
+1. System Monitoring
+
+ACTDRS currently monitors:
+
+CPU usage
+RAM usage
+Disk usage
+Running processes
+
+Python's psutil library is used for system monitoring.
+
+2. Threat Detection
+
+The current detection module checks system resource thresholds.
+
+Current rules:
+
+CPU > 90%   → HIGH
+RAM > 90%   → HIGH
+Disk > 95%  → HIGH
+
+Otherwise:
+
+NORMAL
+3. Decision Engine
+
+The decision engine receives the detection results and determines the current system decision.
+
+Example:
+
+CPU      → NORMAL
+RAM      → NORMAL
+Disk     → NORMAL
+
+Decision → NORMAL
+4. Response Engine
+
+The response module receives the detection results and provides the corresponding response behavior.
+
+Current response functions include:
+
+CPU response
+RAM response
+Disk response
+5. Database Logging
+
+ACTDRS uses SQLite for local event storage.
+
+Current database:
+
+actdrs.db
+
+The database contains:
+
+system_logs
+
+Stores:
+
+ID
+Timestamp
+CPU usage
+RAM usage
+Disk usage
+Decision
+security_events
+
+Stores:
+
+ID
+Timestamp
+Event type
+Severity
+Description
+Decision
+Example Security Event
+
+A detected high CPU condition can be represented as:
+
+Event Type: HIGH_CPU
+Severity: MEDIUM
+Description: CPU usage reached 95%
+Decision: CHECK_CPU
+Project Structure
+ACTDRS/
+│
+├── ai/
+│   └── decision_engine.py
+│
+├── analyzer/
+│
+├── collector/
+│
+├── config/
+│
+├── dashboard/
+│
+├── database/
+│   └── database_manager.py
+│
+├── detection/
+│   └── threat_detector.py
+│
+├── docs/
+│
+├── logs/
+│
+├── monitoring/
+│   ├── cpu_monitor.py
+│   ├── disk_monitor.py
+│   ├── process_monitor.py
+│   ├── ram_monitor.py
+│   └── system_monitor.py
+│
+├── reports/
+│
+├── response/
+│   └── response_engine.py
+│
+├── tests/
+│
+├── app.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+Technologies Used
+Python
+Linux / Ubuntu
+SQLite
+psutil
+Git
+GitHub
+Current Development Status
+
+ACTDRS is currently in the core prototype and security-event logging stage.
+
+Completed:
+
+System monitoring
+Process monitoring
+Threat detection
+Decision engine
+Response engine
+SQLite database
+System log storage
+Security event table
+Security event insertion testing
+Planned Features
+
+The project will be developed further with:
+
+Network monitoring
+Network connection analysis
+Security event correlation
+More advanced threat detection
+Controlled attack simulations
+Automated threat response
+Automated containment
+Self-healing verification
+Dashboard
+Security notifications
+Anomaly detection using machine learning
+Testing and evaluation
+Future Architecture
+             ACTDRS
+                │
+       ┌────────┴────────┐
+       │                 │
+ System Monitoring   Network Monitoring
+       │                 │
+       └────────┬────────┘
+                ↓
+        Threat Detection
+                ↓
+       Event Correlation
+                ↓
+        Decision Engine
+                ↓
+       Response Engine
+                ↓
+       Threat Containment
+                ↓
+       Recovery Verification
+                ↓
+        Security Database
+                ↓
+           Dashboard
+                ↓
+          Notification
+Important Note
+
+The current decision engine is primarily rule-based.
+
+Machine-learning-based anomaly detection is planned as a future component of ACTDRS.
+
+Therefore, the current prototype should not be considered a complete AI-based cybersecurity platform.
+
+Project Goal
+
+The long-term goal of ACTDRS is to develop a lightweight, explainable and locally deployable cybersecurity monitoring and response prototype that can detect suspicious activity, assist in making security decisions, automatically respond to selected threats, and verify system recovery.
