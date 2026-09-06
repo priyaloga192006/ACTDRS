@@ -1,0 +1,278 @@
+Folder Structure
+ACTDRS/
+│
+├── monitoring/
+│      └── system_monitor.py
+│
+├── detection/
+│      └── threat_detector.py
+│
+├── response/
+│      └── response_engine.py
+│
+├── ai/
+│      └── decision_engine.py
+Final system_monitor.py
+import psutil
+import time
+
+# Detection Module
+from detection.threat_detector import (
+    detect_cpu,
+    detect_ram,
+    detect_disk
+)
+
+# AI Decision Module
+from ai.decision_engine import decide
+
+# Response Module
+from response.response_engine import (
+    respond_to_cpu,
+    respond_to_ram,
+    respond_to_disk
+)
+
+while True:
+
+    cpu = psutil.cpu_percent(interval=1)
+
+    memory = psutil.virtual_memory()
+
+    disk = psutil.disk_usage('/')
+
+    print("----------------------------------")
+
+    print(f"CPU Usage : {cpu}%")
+
+    cpu_status = detect_cpu(cpu)
+
+    print(f"CPU Status : {cpu_status}")
+
+
+
+    print(f"RAM Usage : {memory.percent}%")
+
+    ram_status = detect_ram(memory.percent)
+
+    print(f"RAM Status : {ram_status}")
+
+
+
+    print(f"Disk Usage : {disk.percent}%")
+
+    disk_status = detect_disk(disk.percent)
+
+    print(f"Disk Status : {disk_status}")
+
+
+
+    # AI Decision
+
+    decision = decide(
+        cpu_status,
+        ram_status,
+        disk_status
+    )
+
+    print(f"\nAI Decision : {decision}")
+
+
+
+    # Response Engine
+
+    respond_to_cpu(cpu_status)
+
+    respond_to_ram(ram_status)
+
+    respond_to_disk(disk_status)
+
+    print("----------------------------------")
+
+    time.sleep(3)
+How the program works
+Step 1
+
+Read the system
+
+CPU = 95%
+
+RAM = 91%
+
+Disk = 60%
+
+↓
+
+Step 2
+
+Threat Detection
+
+detect_cpu(95)
+
+↓
+
+HIGH
+detect_ram(91)
+
+↓
+
+HIGH
+detect_disk(60)
+
+↓
+
+NORMAL
+
+↓
+
+Step 3
+
+AI Decision
+
+CPU = HIGH
+
+RAM = HIGH
+
+Disk = NORMAL
+
+↓
+
+decision_engine.py
+
+↓
+
+POSSIBLE_ATTACK
+
+↓
+
+Step 4
+
+Response Engine
+
+CPU HIGH
+
+↓
+
+Notify
+RAM HIGH
+
+↓
+
+Log
+
+↓
+
+Output
+
+ACTION :
+Notify Admin
+
+Logging Incident
+
+Preparing Isolation
+Final Output
+
+Suppose your CPU is 94%, RAM is 92%, and Disk is 45%.
+
+Your terminal will display:
+
+----------------------------------
+
+CPU Usage : 94%
+CPU Status : HIGH
+
+RAM Usage : 92%
+RAM Status : HIGH
+
+Disk Usage : 45%
+Disk Status : NORMAL
+
+AI Decision : POSSIBLE_ATTACK
+
+🚨 ACTION : High CPU detected!
+✔ Logging Incident
+✔ Notify Administrator
+✔ Preparing Isolation
+
+🚨 ACTION : High RAM Usage
+✔ Logging Incident
+✔ Notify Administrator
+
+Disk Normal
+
+----------------------------------
+But there is one problem ❌
+
+If I were reviewing this code as a software engineer, I would not keep it this way.
+
+Why?
+
+Notice this:
+
+respond_to_cpu(cpu_status)
+
+respond_to_ram(ram_status)
+
+respond_to_disk(disk_status)
+
+We're responding three separate times.
+
+But our AI already made a decision:
+
+AI Decision
+
+↓
+
+POSSIBLE_ATTACK
+
+So why ignore it?
+
+A Better Design (We'll implement this later)
+
+Instead of:
+
+CPU HIGH
+
+↓
+
+Respond
+
+and
+
+RAM HIGH
+
+↓
+
+Respond
+
+We'll do:
+
+CPU HIGH
+
+RAM HIGH
+
+↓
+
+Decision Engine
+
+↓
+
+POSSIBLE_ATTACK
+
+↓
+
+Response Engine
+
+↓
+
+Take ONE coordinated action
+
+Then the response engine will decide:
+
+Kill suspicious process
+Block IP
+Isolate endpoint
+Send notification
+Save logs
+
+This is much closer to how real EDR/XDR platforms operate.
