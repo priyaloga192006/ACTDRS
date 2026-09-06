@@ -1,0 +1,99 @@
+Step 8 — Restore the CPU threshold
+
+If you temporarily changed:
+
+if cpu > 20:
+
+change it back to:
+
+if cpu > 90:
+
+Also keep your RAM and disk thresholds as:
+
+if ram > 90:
+if disk > 95:
+
+Save with Ctrl + S.
+
+Step 9 — Run ACTDRS normally
+
+From:
+
+cd ~/ACTDRS
+
+run:
+
+python3 -m monitoring.system_monitor
+
+You should get something like:
+
+======= ACTDRS System Monitor =======
+-----------------------
+CPU Usage : 25.3%
+CPU Status : NORMAL
+RAM Usage : 64.8%
+RAM Status : NORMAL
+Disk Usage : 34.9%
+Disk Status : NORMAL
+
+AI DECISION : NORMAL
+Log saved to database.
+
+SYSTEM NORMAL
+RAM NORMAL
+DISK NORMAL
+
+Running Processes
+...
+Waiting for next scan...
+
+Let it run for a few cycles, then:
+
+Ctrl + C
+
+The KeyboardInterrupt after Ctrl+C is expected. It isn't a project failure.
+
+🎉 Day 9 is now COMPLETE
+
+Your ACTDRS currently has this pipeline:
+
+              ACTDRS
+                 │
+                 ▼
+        System Monitoring
+        CPU / RAM / Disk
+                 │
+                 ▼
+        Threat Detection
+        NORMAL / HIGH
+                 │
+                 ▼
+        Decision Engine
+                 │
+                 ▼
+          AI Decision
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+   system_logs      security_events
+        │                 │
+        └────────┬────────┘
+                 ▼
+             SQLite
+
+That's a legitimate working foundation.
+
+Completed so far
+✅ CPU monitoring
+✅ RAM monitoring
+✅ Disk monitoring
+✅ Process monitoring
+✅ Threat detection
+✅ Decision engine
+✅ Response engine
+✅ SQLite database
+✅ System log storage
+✅ Security-event table
+✅ Security-event insertion
+✅ Security-event verification
+✅ Automatic detection → event logging test
