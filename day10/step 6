@@ -1,0 +1,148 @@
+Day 10 — Step 6: Connect network detection to the monitor
+
+Currently ACTDRS has two separate pieces:
+
+network_monitor.py
+        ↓
+gets destination port
+
+and
+
+threat_detector.py
+        ↓
+checks whether port is suspicious
+
+We need to connect them:
+
+Network connection
+       ↓
+Destination port
+       ↓
+detect_suspicious_port()
+       ↓
+NORMAL / SUSPICIOUS
+       ↓
+Store result
+1. Open network_monitor.py
+
+At the top, you should already have something similar to:
+
+from database.database_manager import insert_network_event
+
+Add the threat detector import underneath it:
+
+from detection.threat_detector import detect_suspicious_port
+
+So the imports should look roughly like:
+
+import psutil
+
+from database.database_manager import insert_network_event
+from detection.threat_detector import detect_suspicious_port
+2. Find this section
+
+You currently have:
+
+protocol = get_protocol(connection)
+
+insert_network_event(
+    process_name,
+    pid,
+    protocol,
+    connection.status,
+    source_ip,
+    source_port,
+    destination_ip,
+    destination_port
+)
+
+Replace it with:
+
+protocol = get_protocol(connection)
+
+port_status = detect_suspicious_port(destination_port)
+
+print(f"Port Status     : {port_status}")
+
+insert_network_event(
+    process_name,
+    pid,
+    protocol,
+    connection.status,
+    source_ip,
+    source_port,
+    destination_ip,
+    destination_port
+)
+
+Save:
+
+Ctrl + S
+
+3. Test the network monitor
+
+Run:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+You should now see something like:
+
+--------------------------------
+Process         : firefox
+PID             : 1234
+Status          : ESTABLISHED
+Source IP       : 192.168.1.10
+Source Port     : 52341
+Destination IP  : 142.x.x.x
+Destination Port: 443
+Port Status     : NORMAL
+
+If it encounters something like port 3389, 445, 4444, etc., you may see:
+
+Port Status     : SUSPICIOUS
+One thing to understand
+
+Seeing NORMAL for almost everything is expected.
+
+Don't try to force your computer to generate a suspicious connection just to get the output. We're building the detection logic first and will test it separately.
+
+4. What we have achieved
+
+Your ACTDRS is now becoming an actual pipeline:
+
+                 ACTDRS
+                    │
+          ┌─────────▼─────────┐
+          │ Network Monitor   │
+          └─────────┬─────────┘
+                    │
+             Network data
+                    │
+          ┌─────────▼─────────┐
+          │ Threat Detector   │
+          └─────────┬─────────┘
+                    │
+             Port analysis
+                    │
+              NORMAL / 
+              SUSPICIOUS
+                    │
+          ┌─────────▼─────────┐
+          │ SQLite Database   │
+          └───────────────────┘
+
+But there is still a major missing piece: right now port_status is only printed. It isn't being stored as the event's severity/decision.
+
+That's what we'll fix next.
+
+Your next task
+
+Run the network monitor and make sure you get:
+
+Port Status : NORMAL
+
+or
+
+Port Status : SUSPICIOUS
+
+Then tell me the output. Don't move ahead until this works.
