@@ -1,0 +1,235 @@
+Day 9 — Step 6: Test automatic security-event logging
+
+We know:
+
+detect_cpu(95) → HIGH
+
+Now we need to confirm:
+
+HIGH → HIGH_CPU event → SQLite
+1. Run this exact test
+
+In the Ubuntu terminal, from:
+
+/home/priya/ACTDRS
+
+run:
+
+python3 -c "from database.database_manager import create_security_events_table, insert_security_event; create_security_events_table(); insert_security_event('HIGH_CPU', 'MEDIUM', 'CPU usage reached 95%', 'CHECK_CPU'); print('HIGH_CPU security event inserted')"
+
+You should get:
+
+HIGH_CPU security event inserted
+2. Verify it is really in the database
+
+Immediately run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events').fetchall()); c.close()"
+
+You should see your previous TEST_EVENT and a new HIGH_CPU record.
+
+Something like:
+
+[
+ (1, '...', 'TEST_EVENT', 'LOW', 'Testing security event logging', 'NORMAL'),
+ (2, '...', 'HIGH_CPU', 'MEDIUM', 'CPU usage reached 95%', 'CHECK_CPU')
+]
+
+The exact timestamp/ID will be different.
+
+Why this test matters
+
+We've now proven the complete database-side path:
+
+Detection condition
+      ↓
+HIGH
+      ↓
+Security event
+      ↓
+insert_security_event()
+      ↓
+security_events
+      ↓
+SQLite ✅
+One important distinction
+
+This command manually inserts a HIGH_CPU event. That's only a test.
+
+Our actual ACTDRS code already contains the automatic logic:
+
+CPU → detect_cpu() → HIGH → insert_security_event()
+
+Later we'll test that path without manually inserting anything.
+
+Your task now
+
+Run both commands above and send me the output.
+
+Once that's confirmed, we'll move to Day 9 Step 7: make the security-event records more meaningful by adding severity based on the type of detection, then we'll finish Day 9 by testing the complete automatic flow.
+
+We are ready for the most important test of Day 9:
+
+Can ACTDRS automatically detect a HIGH condition and save it to the database?
+
+We will test the actual system_monitor.py flow—not manually insert an event this time.
+
+Day 9 — Step 7: Test automatic detection → database
+
+Normally your CPU rule is:
+
+if cpu > 90:
+    return "HIGH"
+
+Your computer may never reach 90% CPU during our test. So we will temporarily lower the threshold only for testing.
+
+⚠️ Important
+
+We will change it temporarily and then put it back to 90. This is only a controlled test.
+
+Step 1 — Open threat_detector.py
+
+In VS Code:
+
+ACTDRS
+└── detection
+    └── threat_detector.py
+
+Find:
+
+if cpu > 90:
+
+Temporarily change it to:
+
+if cpu > 0:
+
+So your CPU function becomes:
+
+def detect_cpu(cpu):
+
+    if cpu > 0:
+        return "HIGH"
+
+    return "NORMAL"
+
+Do not change RAM or disk.
+
+Save with:
+
+Ctrl + S
+
+Step 2 — Run ACTDRS
+
+Open Ubuntu terminal.
+
+Make sure you're here:
+
+/home/priya/ACTDRS
+
+Run:
+
+python3 -m monitoring.system_monitor
+
+Because your CPU will almost certainly be greater than 0%, you should see something similar to:
+
+CPU Usage : 20.5%
+CPU Status : HIGH
+
+RAM Usage : 65.2%
+RAM Status : NORMAL
+
+Disk Usage : 34.9%
+Disk Status : NORMAL
+
+AI DECISION : CHECK_CPU
+
+Most importantly, you should see the security event being saved if your system_monitor.py integration is correct.
+
+Let it run for one or two scans only.
+
+Then press:
+
+Ctrl + C
+
+Step 3 — Put the CPU threshold back
+
+This is very important.
+
+Go back to:
+
+detection/threat_detector.py
+
+Change:
+
+if cpu > 0:
+
+back to:
+
+if cpu > 90:
+
+Save:
+
+Ctrl + S
+
+Your final detector must remain:
+
+def detect_cpu(cpu):
+
+    if cpu > 90:
+        return "HIGH"
+
+    return "NORMAL"
+Step 4 — Check the database
+
+Now run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events ORDER BY id DESC LIMIT 5').fetchall()); c.close()"
+
+Look for something like:
+
+'HIGH_CPU'
+
+and:
+
+'CPU usage reached 20.5%'
+
+The exact CPU percentage and timestamp will be different.
+
+What this test proves
+
+If you see the new HIGH_CPU record, we've successfully demonstrated:
+
+             ACTDRS
+                │
+                ▼
+        CPU monitoring
+                │
+                ▼
+        detect_cpu()
+                │
+                ▼
+              HIGH
+                │
+                ▼
+          AI decision
+                │
+                ▼
+     insert_security_event()
+                │
+                ▼
+       security_events
+                │
+                ▼
+          SQLite DB ✅
+
+That's a significant milestone because the security-event database is now connected to the detection pipeline.
+
+One thing to watch
+
+If ACTDRS says:
+
+CPU Status : HIGH
+
+but the database doesn't contain HIGH_CPU, don't continue to the next step. We'll fix that connection first.
+
+Do Steps 1–4, especially remember to restore > 90, and send me the database output.
