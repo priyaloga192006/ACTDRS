@@ -1,0 +1,467 @@
+Day 9 — Step 4: Verify the security event
+
+You're already in:
+
+/home/priya/ACTDRS
+
+In the Ubuntu terminal, run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute('SELECT * FROM security_events').fetchall()); c.close()"
+You should see something similar to:
+[(1, '2026-09-02 21:05:00', 'TEST_EVENT', 'LOW', 'Testing security event logging', 'NORMAL')]
+
+Your timestamp will obviously be different.
+
+The important part is that you see:
+
+TEST_EVENT
+LOW
+Testing security event logging
+NORMAL
+Why we're doing this
+
+We've now built and tested:
+
+create_security_events_table()
+             ↓
+      security_events
+             ↓
+insert_security_event()
+             ↓
+       SQLite record
+
+Once we verify that record, we'll take the next important step:
+
+Connect the security-event logging to the ACTDRS detection system so events are generated automatically instead of us manually inserting TEST_EVENT.
+
+For example, eventually:
+
+CPU > threshold
+      ↓
+detect_cpu()
+      ↓
+HIGH
+      ↓
+insert_security_event()
+      ↓
+security_events
+
+That's where this starts becoming a real security-event pipeline rather than a database exercise.
+
+Run only the verification command above and send me the output.
+
+
+So Day 9 is progressing exactly as planned.
+
+We are now at the important part: making ACTDRS generate security events automatically.
+
+Currently:
+
+CPU/RAM/Disk
+     ↓
+Threat Detector
+     ↓
+Decision Engine
+     ↓
+Database
+
+But our new security_events table isn't connected to the detector yet.
+
+We want:
+
+CPU/RAM/Disk
+     ↓
+Threat Detection
+     ↓
+Is something suspicious?
+     ↓
+YES
+ ↓
+Create Security Event
+ ↓
+Save to security_events
+
+For example:
+
+CPU = 95%
+    ↓
+detect_cpu()
+    ↓
+HIGH
+    ↓
+Security Event:
+HIGH_CPU
+MEDIUM
+"CPU usage reached 95%"
+    ↓
+SQLite
+Before we change anything
+
+I don't want you to modify system_monitor.py blindly, because I need to match the code to your actual detection functions.
+
+Please open this file:
+ACTDRS
+└── detection
+    └── threat_detector.py
+
+Copy and send me the entire contents of threat_detector.py.
+
+Why I need it
+
+Your system_monitor.py currently calls:
+
+detect_cpu(cpu)
+detect_ram(memory.percent)
+detect_disk(disk.percent)
+
+I need to see exactly what those functions return.
+
+For example, they might return:
+
+NORMAL
+HIGH
+
+or something different.
+
+Then I'll show you exactly how to connect:
+
+detect_cpu()
+detect_ram()
+detect_disk()
+        ↓
+insert_security_event()
+
+without breaking the working Day 8 system.
+
+So your next action: send me the complete detection/threat_detector.py code. Don't change anything yet.
+
+def detect_cpu(cpu):
+
+    if cpu > 90:
+
+        return "HIGH"
+
+    return " NORMAL"
+
+def detect_ram(ram):
+
+    if ram > 90:
+
+        return "HIGH"
+
+    return "NORMAL"
+
+def detect_disk(disk):
+
+    if disk > 95:
+
+        return "HIGH"
+
+    return " NORMAL "
+Perfect. Now I can see exactly how your detection module works.
+
+Your threat_detector.py is very simple and clear:
+
+CPU > 90%  → HIGH
+CPU ≤ 90%  → NORMAL
+
+RAM > 90%  → HIGH
+RAM ≤ 90%  → NORMAL
+
+Disk > 95% → HIGH
+Disk ≤ 95% → NORMAL
+
+There is one small issue we should fix before connecting the database.
+
+Step 1 — Fix the extra spaces
+
+You currently have:
+
+return " NORMAL"
+
+and:
+
+return " NORMAL "
+
+Those extra spaces can cause problems when another module compares the result with "NORMAL".
+
+For example:
+
+cpu_status == "NORMAL"
+
+will be False if the actual value is:
+
+" NORMAL"
+
+So let's make all three functions return exactly the same string.
+
+Open:
+
+ACTDRS → detection → threat_detector.py
+
+Replace the entire file with:
+
+def detect_cpu(cpu):
+
+    if cpu > 90:
+        return "HIGH"
+
+    return "NORMAL"
+
+
+def detect_ram(ram):
+
+    if ram > 90:
+        return "HIGH"
+
+    return "NORMAL"
+
+
+def detect_disk(disk):
+
+    if disk > 95:
+        return "HIGH"
+
+    return "NORMAL"
+Save:
+
+Ctrl + S
+
+Step 2 — Don't run ACTDRS yet
+
+We haven't connected security-event logging yet.
+
+First, I want to make sure this correction doesn't introduce an error.
+
+Run this in your Ubuntu terminal:
+
+python3 -c "from detection.threat_detector import detect_cpu, detect_ram, detect_disk; print(detect_cpu(50)); print(detect_cpu(95)); print(detect_ram(50)); print(detect_ram(95)); print(detect_disk(50)); print(detect_disk(96))"
+
+You should get:
+
+NORMAL
+HIGH
+NORMAL
+HIGH
+NORMAL
+HIGH
+
+That's our expected result.
+
+Run only this test and send me the output.
+
+After that, we'll do the important part: 
+connecting threat_detector.py → insert_security_event() so ACTDRS automatically records a security event whenever CPU/RAM/Disk crosses its threshold.
+Now we do the main Day 9 integration:
+
+Connect the threat detector to the security_events database.
+
+At the moment, your system can detect HIGH, but it does not automatically save that detection as a security event.
+
+We will change that now.
+
+Day 9 — Step 5: Connect detection → security event logging
+
+We will modify only system_monitor.py.
+
+1. Open
+ACTDRS
+└── monitoring
+    └── system_monitor.py
+Find this part near the top:
+from database.database_manager import (
+    create_database,
+    insert_log
+)
+
+Replace it with:
+
+from database.database_manager import (
+    create_database,
+    insert_log,
+    create_security_events_table,
+    insert_security_event
+)
+2. Create the security-events table when ACTDRS starts
+
+Find:
+
+create_database()
+
+Change it to:
+
+create_database()
+create_security_events_table()
+
+So when ACTDRS starts:
+
+create_database()
+        ↓
+system_logs created
+
+create_security_events_table()
+        ↓
+security_events created
+3. Automatically create a security event
+
+Now find this section:
+
+decision = decide(
+    cpu_status,
+    ram_status,
+    disk_status
+)
+
+print(f"\nAI DECISION : {decision}")
+
+Immediately after that, add:
+
+    # =========================
+    # SECURITY EVENT LOGGING
+    # =========================
+
+    if cpu_status == "HIGH":
+        insert_security_event(
+            "HIGH_CPU",
+            "MEDIUM",
+            f"CPU usage reached {cpu}%",
+            decision
+        )
+
+    if ram_status == "HIGH":
+        insert_security_event(
+            "HIGH_RAM",
+            "MEDIUM",
+            f"RAM usage reached {memory.percent}%",
+            decision
+        )
+
+    if disk_status == "HIGH":
+        insert_security_event(
+            "HIGH_DISK",
+            "MEDIUM",
+            f"Disk usage reached {disk.percent}%",
+            decision
+        )
+Important
+
+Make sure this entire block is inside while True:.
+
+The indentation should look like:
+
+while True:
+
+    cpu = ...
+
+    ...
+
+    decision = ...
+
+    print(...)
+
+    if cpu_status == "HIGH":
+        insert_security_event(...)
+
+    if ram_status == "HIGH":
+        insert_security_event(...)
+
+    if disk_status == "HIGH":
+        insert_security_event(...)
+4. What we have built
+
+Previously:
+
+CPU = 95%
+     ↓
+detect_cpu()
+     ↓
+HIGH
+
+Now:
+
+CPU = 95%
+     ↓
+detect_cpu()
+     ↓
+HIGH
+     ↓
+insert_security_event()
+     ↓
+security_events
+
+For example, the database could contain:
+
+HIGH_CPU
+MEDIUM
+CPU usage reached 95%
+CHECK_CPU
+
+This is much more useful for our future dashboard and investigation system.
+
+5. Save
+
+Press:
+
+Ctrl + S
+
+6. Run ACTDRS
+
+In Ubuntu terminal:
+
+cd /home/priya/ACTDRS
+
+Then:
+
+python3 -m monitoring.system_monitor
+
+Let it run for about 15–20 seconds.
+
+You may see:
+CPU Usage : 20.5%
+CPU Status : NORMAL
+
+RAM Usage : 65.2%
+RAM Status : NORMAL
+
+Disk Usage : 34.9%
+Disk Status : NORMAL
+
+AI DECISION : NORMAL
+
+That's fine.
+
+Because your computer isn't necessarily above the thresholds, you might not get a security event yet.
+
+7. Important: we need to test a HIGH event
+
+We don't want to wait for your CPU/RAM to naturally reach 90%.
+
+So after confirming ACTDRS starts without errors:
+
+Press Ctrl+C.
+
+Then we will perform a controlled test of the security-event pipeline.
+
+We will temporarily test the detector with something like:
+
+detect_cpu(95)
+
+which should produce:
+
+HIGH
+
+and then verify that:
+
+HIGH_CPU
+
+is actually saved in SQLite.
+
+Don't do that test yet.
+
+First, run:
+
+python3 -m monitoring.system_monitor
+
+and tell me whether it starts successfully or gives an error.
+
+If it starts, let it run briefly and press Ctrl+C. Then send me the output.
