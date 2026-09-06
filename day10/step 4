@@ -1,0 +1,209 @@
+Day 10 — Step 4: Store network events in SQLite
+
+Currently:
+
+Network connection
+       ↓
+network_monitor.py
+       ↓
+printed on terminal
+
+We want:
+
+Network connection
+       ↓
+network_monitor.py
+       ↓
+network event
+       ↓
+SQLite
+       ↓
+security_events
+Step 1 — Modify database_manager.py
+
+Open:
+
+ACTDRS/database/database_manager.py
+
+Go to the bottom of the file.
+
+Add this function:
+
+def insert_network_event(
+    process_name,
+    pid,
+    protocol,
+    status,
+    source_ip,
+    source_port,
+    destination_ip,
+    destination_port
+):
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO security_events
+        (timestamp, event_type, severity, description, decision)
+        VALUES (?, ?, ?, ?, ?)
+    """,
+    (
+        timestamp,
+        "NETWORK_CONNECTION",
+        "INFO",
+        f"{protocol} connection from {source_ip}:{source_port} "
+        f"to {destination_ip}:{destination_port} "
+        f"by {process_name} (PID: {pid})",
+        "NETWORK_MONITORING"
+    ))
+
+    conn.commit()
+    conn.close()
+
+Save with Ctrl + S.
+
+Important
+
+We're storing network information inside the existing security_events table for now. We are not creating another table yet.
+
+Step 2 — Import the function
+
+Open:
+
+ACTDRS/monitoring/network_monitor.py
+
+At the very top, you currently have:
+
+import psutil
+
+Change it to:
+
+import psutil
+
+from database.database_manager import insert_network_event
+Step 3 — Actually save each connection
+
+Inside:
+
+def monitor_network_connections():
+
+you already have:
+
+protocol = get_protocol(connection)
+
+Immediately after that line, add:
+
+        insert_network_event(
+            process_name,
+            pid,
+            protocol,
+            connection.status,
+            source_ip,
+            source_port,
+            destination_ip,
+            destination_port
+        )
+
+So that section should look like:
+
+        pid = connection.pid
+
+        process_name = get_process_name(pid)
+
+        protocol = get_protocol(connection)
+
+        insert_network_event(
+            process_name,
+            pid,
+            protocol,
+            connection.status,
+            source_ip,
+            source_port,
+            destination_ip,
+            destination_port
+        )
+
+        print("--------------------------------")
+        print(f"Process         : {process_name}")
+        print(f"PID             : {pid}")
+        print(f"Protocol        : {protocol}")
+        print(f"Status          : {connection.status}")
+        print(f"Source IP       : {source_ip}")
+        print(f"Source Port     : {source_port}")
+        print(f"Destination IP  : {destination_ip}")
+        print(f"Destination Port: {destination_port}")
+
+Save.
+
+Step 4 — Test it
+
+From:
+
+/home/priya/ACTDRS
+
+run:
+
+python3 -c "from monitoring.network_monitor import monitor_network_connections; monitor_network_connections()"
+
+You should still see your network connections printed.
+
+But now something else happens:
+
+Every connection detected is also inserted into security_events.
+
+Step 5 — Verify the database
+
+Run:
+
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); print(c.execute(\"SELECT id,timestamp,event_type,severity,description,decision FROM security_events ORDER BY id DESC LIMIT 10\").fetchall()); c.close()"
+
+Look for:
+
+NETWORK_CONNECTION
+
+and descriptions similar to:
+
+TCP connection from 192.168.1.5:52341 to 142.x.x.x:443 by firefox
+One important problem we'll fix next
+
+Right now we're recording every network connection as a security event.
+
+That's not good enough for a real SOC system.
+
+We need to distinguish:
+
+NORMAL NETWORK ACTIVITY
+        ↓
+       INFO
+
+from:
+
+SUSPICIOUS NETWORK ACTIVITY
+        ↓
+       WARNING
+
+and eventually:
+
+MALICIOUS / HIGH-RISK ACTIVITY
+        ↓
+       HIGH
+
+Otherwise your database will fill with thousands of ordinary connections and analysts will get alert fatigue.
+
+So the next stage is:
+
+Network connection
+       ↓
+Analyze
+       ↓
+Normal or suspicious?
+       ↓
+Severity
+       ↓
+Security event
+For now, do only Steps 1–5.
+
+Don't build the suspicious-connection detector yet. First confirm that NETWORK_CONNECTION appears in your database.
