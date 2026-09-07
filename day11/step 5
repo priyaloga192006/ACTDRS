@@ -1,0 +1,39 @@
+Day 11 — Step 5: Test the complete detection pipeline with a controlled event.
+
+We need to prove that ACTDRS can go from:
+
+Network data
+     ↓
+Suspicious condition
+     ↓
+Risk analysis
+     ↓
+Security event
+     ↓
+SQLite
+
+We will not attack your system. We'll use a controlled test input.
+
+Step 5A — Test the risk analyzer
+
+From ~/ACTDRS, run:
+
+python3 -c "from analyzer.network_analyzer import calculate_network_risk; print(calculate_network_risk('SUSPICIOUS', 'Unknown', '8.8.8.8'))"
+
+You should get approximately:
+
+(70, 'HIGH', ['Suspicious destination port', 'Unknown process', 'External destination'])
+
+However, there's an important issue: your current calculate_network_risk() accepts status, process_name, and destination_ip, but your suspicious-port result is not being passed into it. Therefore, the function may not actually produce that 70 score.
+
+That's something we need to fix properly rather than pretending the pipeline is complete.
+
+So do this first
+
+Run:
+
+python3 -c "from analyzer.network_analyzer import calculate_network_risk; print(calculate_network_risk('SUSPICIOUS', 'Unknown', '8.8.8.8'))"
+
+Send me the exact output.
+
+Then I'll give you the corrected network_analyzer.py + network_monitor.py together, so the suspicious-port information actually reaches the risk engine. This is the correct next step; otherwise our "risk score" isn't really using all the signals we've collected.
