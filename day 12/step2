@@ -1,0 +1,125 @@
+Day 12 — Step 2: Connect Connection Tracker → Network Monitor
+
+Open:
+
+ACTDRS/monitoring/network_monitor.py
+1. Add this import at the top
+
+Under your existing imports, add:
+
+from analyzer.connection_tracker import track_connection
+
+So your imports should include:
+
+import psutil
+
+from analyzer.network_analyzer import calculate_network_risk
+from analyzer.connection_tracker import track_connection
+
+from database.database_manager import (
+    insert_network_event,
+    insert_security_event
+)
+
+from detection.threat_detector import detect_suspicious_port
+2. Find this section
+
+You currently have:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    port_status,
+    process_name,
+    destination_ip
+)
+
+Immediately after it, add:
+
+connection_count, frequency_status = track_connection(
+    process_name,
+    destination_ip
+)
+
+Then add:
+
+print(f"Connection Count: {connection_count}")
+print(f"Frequency Status : {frequency_status}")
+
+So that entire section becomes:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    port_status,
+    process_name,
+    destination_ip
+)
+
+connection_count, frequency_status = track_connection(
+    process_name,
+    destination_ip
+)
+
+print(f"Connection Count: {connection_count}")
+print(f"Frequency Status : {frequency_status}")
+3. Don't create a security event yet
+
+For now, only display the result.
+
+We first need to confirm that the tracker works with real network connections.
+
+Your flow is now:
+
+Real Network Connection
+        ↓
+Process + Destination IP
+        ↓
+Connection Tracker
+        ↓
+Count connections
+        ↓
+NORMAL / SUSPICIOUS
+
+For example:
+
+Firefox → 8.8.8.8
+       ↓
+Connection #1 → NORMAL
+       ↓
+Connection #2 → NORMAL
+       ↓
+...
+       ↓
+Connection #10 → SUSPICIOUS
+4. Save
+
+Press:
+
+Ctrl + S
+
+Then run:
+
+python3 -m monitoring.network_monitor
+
+Let it run for 20–30 seconds.
+
+You should see something like:
+
+Connection Count: 1
+Frequency Status : NORMAL
+
+and potentially later:
+
+Connection Count: 2
+Frequency Status : NORMAL
+
+The exact numbers depend on your machine's actual network activity.
+
+Then press:
+
+Ctrl + C
+
+Important
+
+You may not reach 10 connections for the same process/IP during this test. That's okay.
+
+We're testing whether the counter increases and old entries are retained for 60 seconds.
+
+Send me the output/screenshot after running it. If it works, we'll do Day 12 — Step 3: combine frequency risk with the existing network risk score.
