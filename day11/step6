@@ -1,0 +1,132 @@
+Day 11 — Step 6: Fix the Risk Scoring Pipeline
+
+We want this:
+
+Network connection
+       ↓
+Suspicious-port detector
+       ↓
+port_status
+       ↓
+Risk Analyzer
+       ↓
+Risk Score
+       ↓
+LOW / MEDIUM / HIGH
+1. Replace analyzer/network_analyzer.py
+
+Open:
+
+ACTDRS/analyzer/network_analyzer.py
+
+Delete everything and paste:
+
+def calculate_network_risk(
+    port_status,
+    process_name,
+    destination_ip
+):
+
+    risk_score = 0
+    reasons = []
+
+    # Suspicious destination port
+    if port_status == "SUSPICIOUS":
+        risk_score += 30
+        reasons.append("Suspicious destination port")
+
+    # Unknown process
+    if process_name == "Unknown":
+        risk_score += 20
+        reasons.append("Unknown process")
+
+    # External destination
+    if destination_ip not in [
+        "N/A",
+        "127.0.0.1",
+        "::1",
+        "localhost"
+    ]:
+        risk_score += 20
+        reasons.append("External destination")
+
+    # Determine risk level
+    if risk_score >= 60:
+        risk_level = "HIGH"
+
+    elif risk_score >= 30:
+        risk_level = "MEDIUM"
+
+    else:
+        risk_level = "LOW"
+
+    return risk_score, risk_level, reasons
+
+Save with Ctrl + S.
+
+2. Now update network_monitor.py
+
+Find:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    connection.status,
+    process_name,
+    destination_ip
+)
+
+Replace it with:
+
+risk_score, risk_level, reasons = calculate_network_risk(
+    port_status,
+    process_name,
+    destination_ip
+)
+
+Save again.
+
+Why this correction matters
+
+Previously:
+
+connection.status = ESTABLISHED
+
+was being passed as the first argument.
+
+That is wrong because the risk analyzer expects:
+
+port_status
+
+Now the actual result from:
+
+detect_suspicious_port(destination_port)
+
+is passed into the risk engine.
+
+So:
+
+Port 443
+  ↓
+NORMAL
+  ↓
+Risk +0
+
+Port 4444
+  ↓
+SUSPICIOUS
+  ↓
+Risk +30
+
+That's the correct data flow.
+
+3. Test it
+
+Run:
+
+python3 -c "from analyzer.network_analyzer import calculate_network_risk; print(calculate_network_risk('NORMAL', 'firefox', '8.8.8.8')); print(calculate_network_risk('SUSPICIOUS', 'Unknown', '8.8.8.8'))"
+
+Expected:
+
+(20, 'LOW', ['External destination'])
+(70, 'HIGH', ['Suspicious destination port', 'Unknown process', 'External destination'])
+
+If you get those results, Day 11 Step 6 is complete.
