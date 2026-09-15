@@ -1,0 +1,88 @@
+Day 13 — Step 3: Connect Risk Correlator → Network Monitor
+
+Now we connect the new risk_correlator.py to your existing live network monitor.
+
+1. Open
+ACTDRS/monitoring/network_monitor.py
+2. Add this import
+
+At the top, with your other analyzer imports:
+
+from analyzer.risk_correlator import calculate_overall_risk
+
+So you should have:
+
+from analyzer.network_analyzer import calculate_network_risk
+from analyzer.connection_tracker import track_connection
+from analyzer.risk_correlator import calculate_overall_risk
+3. Find your existing frequency/risk section
+
+You currently have something like:
+
+connection_count, frequency_status = track_connection(
+    process_name,
+    destination_ip
+)
+
+print(f"Connection Count: {connection_count}")
+print(f"Frequency Status : {frequency_status}")
+
+Keep this.
+
+Then, after it, add:
+
+# ----------------------------------------------------
+# OVERALL RISK CORRELATION
+# ----------------------------------------------------
+
+overall_score, overall_level, overall_reasons = calculate_overall_risk(
+    risk_score,
+    frequency_status,
+    port_status
+)
+
+print(f"Overall Risk Score   : {overall_score}")
+print(f"Overall Risk Level   : {overall_level}")
+print(f"Overall Risk Reasons : {overall_reasons}")
+Your flow is now
+Network connection
+       ↓
+Network risk analysis
+       ↓
+Frequency analysis
+       ↓
+Port analysis
+       ↓
+Risk Correlation Engine
+       ↓
+OVERALL RISK
+4. Save
+Ctrl + S
+5. Run
+
+From ~/ACTDRS:
+
+python3 -m monitoring.network_monitor
+
+You should now see something like:
+
+Connection Count: 1
+Frequency Status : NORMAL
+
+Overall Risk Score   : 20
+Overall Risk Level   : LOW
+Overall Risk Reasons : []
+
+Or, depending on your actual connections:
+
+Overall Risk Score   : 40
+Overall Risk Level   : MEDIUM
+⚠️ Don't change the database or response engine yet.
+
+We're only verifying:
+
+existing network analysis → new correlation engine → overall risk
+
+Once this runs without a traceback, Day 13 Step 3 is complete.
+
+Then we'll move to Step 4: make HIGH overall risk create a security event.
