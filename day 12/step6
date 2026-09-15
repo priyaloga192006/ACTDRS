@@ -1,0 +1,46 @@
+Day 12 — Step 5: Verify the security event in SQLite
+
+Now we need to check whether ACTDRS is actually recording the security events in the database.
+
+You don't need to change any Python file.
+
+1. Stop the monitor if it's still running
+Ctrl + C
+2. From ~/ACTDRS, run:
+python3 -c "import sqlite3; c=sqlite3.connect('actdrs.db'); rows=c.execute(\"SELECT * FROM security_events ORDER BY id DESC LIMIT 10\").fetchall(); [print(row) for row in rows]; c.close()"
+What we're checking
+
+We want to see your existing security events and, if a repeated connection actually reached the threshold, something like:
+
+REPEATED_CONNECTION
+
+along with:
+
+MEDIUM
+Repeated connection detected...
+CHECK_NETWORK_FREQUENCY
+One important point
+
+If you don't see REPEATED_CONNECTION, that does not automatically mean the code failed.
+
+Your tracker only declares:
+
+10 or more connections
++
+same process
++
+same destination IP
++
+within 60 seconds
+
+as suspicious. Your computer may simply not have produced that pattern during the test.
+
+So this step is primarily checking that the security_events table can be queried and that your existing events are intact.
+
+Run that command and send me the output.
+
+After that:
+
+Day 12 Step 5 → ✅
+
+Then we'll do Day 12 Step 6 — complete end-to-end test, which will finish Day 12.
