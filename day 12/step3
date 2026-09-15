@@ -1,0 +1,261 @@
+Delete everything currently inside network_monitor.py and paste this entire program. This version keeps the Day 11 functionality and adds the Day 12 Step 3 frequency-risk logic.
+
+import psutil
+
+from analyzer.network_analyzer import calculate_network_risk
+from analyzer.connection_tracker import track_connection
+
+from database.database_manager import (
+    insert_network_event,
+    insert_security_event
+)
+
+from detection.threat_detector import detect_suspicious_port
+
+
+# ============================================================
+# GET PROCESS NAME
+# ============================================================
+
+def get_process_name(pid):
+
+    if pid is None:
+        return "Unknown"
+
+    try:
+        process = psutil.Process(pid)
+        return process.name()
+
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
+
+
+# ============================================================
+# GET NETWORK PROTOCOL
+# ============================================================
+
+def get_protocol(connection):
+
+    if connection.type == 1:
+        return "TCP"
+
+    elif connection.type == 2:
+        return "UDP"
+
+    else:
+        return "UNKNOWN"
+
+
+# ============================================================
+# MONITOR NETWORK CONNECTIONS
+# ============================================================
+
+def monitor_network_connections():
+
+    connections = psutil.net_connections(kind="inet")
+
+    print("\n========================================")
+    print("       ACTDRS NETWORK MONITOR")
+    print("========================================")
+
+    for connection in connections:
+
+        # ----------------------------------------------------
+        # SOURCE INFORMATION
+        # ----------------------------------------------------
+
+        if connection.laddr:
+            source_ip = connection.laddr.ip
+            source_port = connection.laddr.port
+        else:
+            source_ip = "N/A"
+            source_port = "N/A"
+
+
+        # ----------------------------------------------------
+        # DESTINATION INFORMATION
+        # ----------------------------------------------------
+
+        if connection.raddr:
+            destination_ip = connection.raddr.ip
+            destination_port = connection.raddr.port
+        else:
+            destination_ip = "N/A"
+            destination_port = "N/A"
+
+
+        # ----------------------------------------------------
+        # PROCESS INFORMATION
+        # ----------------------------------------------------
+
+        pid = connection.pid
+
+        process_name = get_process_name(pid)
+
+        protocol = get_protocol(connection)
+
+
+        # ----------------------------------------------------
+        # SUSPICIOUS PORT DETECTION
+        # ----------------------------------------------------
+
+        port_status = detect_suspicious_port(destination_port)
+
+        print(f"\nPort Status     : {port_status}")
+
+        if port_status == "SUSPICIOUS":
+
+            insert_security_event(
+                "SUSPICIOUS_PORT",
+                "MEDIUM",
+                f"Suspicious destination port detected: {destination_port}",
+                "CHECK_NETWORK"
+            )
+
+            print("⚠ SUSPICIOUS PORT SECURITY EVENT RECORDED!")
+
+
+        # ----------------------------------------------------
+        # SAVE NETWORK CONNECTION
+        # ----------------------------------------------------
+
+        insert_network_event(
+            process_name,
+            pid,
+            protocol,
+            connection.status,
+            source_ip,
+            source_port,
+            destination_ip,
+            destination_port
+        )
+
+
+        # ----------------------------------------------------
+        # NETWORK RISK ANALYSIS
+        # ----------------------------------------------------
+
+        risk_score, risk_level, reasons = calculate_network_risk(
+            port_status,
+            process_name,
+            destination_ip
+        )
+
+
+        # ----------------------------------------------------
+        # CONNECTION FREQUENCY TRACKING
+        # ----------------------------------------------------
+
+        connection_count, frequency_status = track_connection(
+            process_name,
+            destination_ip
+        )
+
+        print(f"Connection Count: {connection_count}")
+        print(f"Frequency Status : {frequency_status}")
+
+
+        # ----------------------------------------------------
+        # FREQUENCY RISK
+        # ----------------------------------------------------
+
+        if frequency_status == "SUSPICIOUS":
+
+            risk_score += 30
+
+            reasons.append("High connection frequency")
+
+            if risk_score >= 70:
+                risk_level = "HIGH"
+
+            elif risk_score >= 40:
+                risk_level = "MEDIUM"
+
+            else:
+                risk_level = "LOW"
+
+
+        # ----------------------------------------------------
+        # HIGH RISK SECURITY EVENT
+        # ----------------------------------------------------
+
+        if risk_level == "HIGH":
+
+            insert_security_event(
+                "HIGH_NETWORK_RISK",
+                "HIGH",
+                f"Network risk detected: {reasons}",
+                "INVESTIGATE_CONNECTION"
+            )
+
+            print("⚠ HIGH NETWORK RISK SECURITY EVENT RECORDED!")
+
+
+        # ----------------------------------------------------
+        # DISPLAY NETWORK INFORMATION
+        # ----------------------------------------------------
+
+        print("----------------------------------------")
+
+        print(f"Process         : {process_name}")
+        print(f"PID             : {pid}")
+        print(f"Protocol        : {protocol}")
+        print(f"Status          : {connection.status}")
+        print(f"Source IP       : {source_ip}")
+        print(f"Source Port     : {source_port}")
+        print(f"Destination IP  : {destination_ip}")
+        print(f"Destination Port: {destination_port}")
+
+        print(f"Risk Score      : {risk_score}")
+        print(f"Risk Level      : {risk_level}")
+        print(f"Risk Reasons    : {reasons}")
+
+        print("----------------------------------------")
+
+
+# ============================================================
+# PROGRAM ENTRY POINT
+# ============================================================
+
+if __name__ == "__main__":
+
+    monitor_network_connections()
+After pasting
+Ctrl + S
+
+Make sure the file is:
+
+ACTDRS/monitoring/network_monitor.py
+Run from ~/ACTDRS:
+python3 -m monitoring.network_monitor
+What you should see
+
+Something like:
+
+Port Status     : NORMAL
+Connection Count: 1
+Frequency Status : NORMAL
+----------------------------------------
+Process         : firefox
+PID             : 3775
+Protocol        : TCP
+Status          : ESTABLISHED
+...
+Risk Score      : 20
+Risk Level      : LOW
+Risk Reasons    : ['External destination']
+----------------------------------------
+
+Do not worry if you don't reach Connection Count: 10. Your computer may simply not generate that many repeated connections to the same process + destination within 60 seconds.
+
+Also, I deliberately used:
+
+calculate_network_risk(
+    port_status,
+    process_name,
+    destination_ip
+)
+
+because your earlier terminal output showed that your current calculate_network_risk() accepts 3 positional arguments. That avoids the 4-argument error you hit earlier.
+
+Run it once. If it completes without a traceback, Day 12 Step 3 is done.
