@@ -1,0 +1,94 @@
+# ACTDRS — Day 12
+## Repeated Network Connection Detection
+
+### Goal
+
+Detect repeated network connections from the same process to the same destination IP within a short time period.
+
+### Why?
+
+A single network connection may be normal.
+
+Repeated connections in a short period can indicate suspicious or automated behavior.
+
+### Step 1 — Connection Tracker
+
+Created:
+
+analyzer/connection_tracker.py
+
+The tracker stores connection timestamps using:
+
+Process Name + Destination IP
+
+It keeps only connections from the previous 60 seconds.
+
+### Step 2 — Connect Tracker to Network Monitor
+
+The connection tracker was integrated with:
+
+monitoring/network_monitor.py
+
+The network monitor now displays:
+
+- Connection count
+- Frequency status
+
+### Step 3 — Frequency-Based Risk
+
+If the same process repeatedly connects to the same destination IP:
+
+10 or more connections within 60 seconds
+→ SUSPICIOUS
+
+A suspicious frequency increases the network risk score by 30.
+
+### Step 4 — Security Event
+
+When repeated connection frequency becomes suspicious, ACTDRS records:
+
+REPEATED_CONNECTION
+
+with MEDIUM severity.
+
+The event is stored in the security events database.
+
+### Step 5 — Database Verification
+
+Verified the security_events table and checked that security events can be retrieved from SQLite.
+
+### Step 6 — Final Test
+
+Tested the complete network monitoring pipeline.
+
+### Day 12 Result
+
+ACTDRS can now analyze not only individual network connections but also connection frequency.
+
+The system considers:
+
+Process
+↓
+Destination IP
+↓
+Connection frequency
+↓
+Risk score
+↓
+Security event
+
+### Important Note
+
+This is a rule-based behavior-analysis prototype.
+
+It is not machine learning yet.
+
+### Technologies
+
+- Python
+- psutil
+- SQLite
+- datetime
+- defaultdict
+- Network monitoring
+- Rule-based detection
