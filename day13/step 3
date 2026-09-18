@@ -1,0 +1,53 @@
+Day 13 — Step 4: Record the overall HIGH-risk result
+What we have now
+ACTDRS can calculate:
+Network risk
+     +
+Connection frequency
+     +
+Suspicious port
+     ↓
+Overall risk score
+     ↓
+LOW / MEDIUM / HIGH
+But now we want the final HIGH-risk decision to be recorded as a security event in SQLite.
+Step 4 — Test the HIGH-risk event
+You already have this section in network_monitor.py:
+if overall_level == "HIGH":
+
+    insert_security_event(
+        "HIGH_OVERALL_NETWORK_RISK",
+        "HIGH",
+        f"Overall network risk detected: "
+        f"{overall_reasons}",
+        "INVESTIGATE_NETWORK_ACTIVITY"
+    )
+
+    print("⚠ HIGH OVERALL NETWORK RISK RECORDED!")
+
+So don't change the code yet.
+1. Run ACTDRS
+From:
+~/ACTDRS
+run:
+python3 -m monitoring.network_monitor
+Let it run for about 30 seconds.
+2. What we're looking for
+If an actual connection reaches:
+Overall Risk Level : HIGH
+you should see:
+⚠ HIGH OVERALL NETWORK RISK RECORDED!
+That means:
+Detection → Risk correlation → Security event → Database
+is working.
+3. If you DON'T get HIGH
+That's completely okay.
+Your normal computer traffic may produce only:
+LOW
+or:
+MEDIUM
+during the test.
+Do not modify the thresholds just to force a HIGH result. We want realistic detection rules.
+4. Stop the program
+After ~30 seconds:
+Ctrl + C
