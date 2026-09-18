@@ -1,0 +1,243 @@
+Day 13 — Step 5: Verify HIGH-risk event in SQLite
+Now we need to confirm that when ACTDRS detects:
+Overall Risk Level   : HIGH
+it actually stores:
+HIGH_OVERALL_NETWORK_RISK
+in the database.
+1. First run the network monitor
+From Ubuntu:
+cd /home/priya/ACTDRS
+python3 -m monitoring.network_monitor
+Let it run for around 20–30 seconds, then press:
+Ctrl + C
+2. Check the database
+Run:
+sqlite3 actdrs.db
+Then:
+SELECT * FROM security_events ORDER BY id DESC LIMIT 10;
+Look for something similar to:
+HIGH_OVERALL_NETWORK_RISK
+You may also see:
+SUSPICIOUS_PORT
+REPEATED_CONNECTION
+Important
+If you don't see HIGH_OVERALL_NETWORK_RISK, don't change the thresholds just to force a HIGH result. Your normal network traffic may simply not have produced a sufficiently high combined risk.
+Send me the output of the SQLite command, and I'll take you to Day 13 Step 6 — final test + GitHub upload.
+
+
+blob:https://chatgpt.com/5e100196-e34a-47f2-b761-b967f058e59d
+From your screenshot:
+Risk Score       : 50
+Risk Level       : MEDIUM
+Overall Score    : 70
+Overall Level    : HIGH
+Overall Reasons  : ['High connection frequency']
+And that is exactly what we wanted to verify: the risk correlator successfully raised the overall risk to HIGH.
+One small issue ⚠️
+You typed:
+sqlite3 actdrs.db
+but Ubuntu says:
+Command 'sqlite3' not found
+So SQLite CLI is not installed. Your ACTDRS database itself can still be working; we just can't inspect it through the sqlite3 command yet.
+Step 5 — install SQLite
+Run:
+sudo apt update
+sudo apt install sqlite3
+Then check:
+sqlite3 --version
+If you get a version number, run:
+sqlite3 actdrs.db
+Then inside SQLite:
+SELECT * FROM security_events ORDER BY id DESC LIMIT 10;
+We should see the HIGH_OVERALL_NETWORK_RISK event.
+Don't change any Python code yet. Your screenshot shows the risk-correlation part is working. 👍
+
+
+
+
+
+    
+
+
+
+
+
+
+
+you mean i have to do it in terminal or vm code? sudo apt update ?
+
+
+
+
+
+
+
+
+
+
+
+
+Yes 👍 — run sudo apt update inside the Ubuntu VirtualBox terminal, the same terminal you used in your screenshot.
+You do not need to run it in VS Code.
+Do this in your Ubuntu VM terminal
+You can use the terminal window shown in your screenshot:
+1. Update package list
+sudo apt update
+It may ask for your Ubuntu password. Type it and press Enter. (The password won't appear while typing—that's normal.)
+2. Install SQLite
+sudo apt install sqlite3
+If it asks:
+Do you want to continue? [Y/n]
+type:
+Y
+and press Enter.
+3. Check installation
+sqlite3 --version
+If you see a version number, you're ready.
+Then we'll do the Day 13 Step 5 database verification. Don't run the SQL command yet; send me the sqlite3 --version output first.
+
+
+blob:https://chatgpt.com/ad7375bf-30b3-4855-b8da-24b4533c1e42
+
+Your terminal is currently showing:
+[sudo: authenticate] Password:
+That means Ubuntu is asking for your Ubuntu user password before it runs sudo apt update.
+What to do now
+1. Type your Ubuntu password
+2. Press Enter
+⚠️ While you type, nothing will appear on the screen — no dots or *. That's completely normal.
+Then sudo apt update should start downloading/updating the package information.
+After it finishes, you should see your prompt again, something like:
+priya@priya-VirtualBox:~/ACTDRS$
+Then run the next command:
+sudo apt install sqlite3
+If it asks:
+Do you want to continue? [Y/n]
+type:
+Y
+and press Enter.
+Don't run anything else yet. Once installation finishes, send me a screenshot/output and I'll give you the next command.
+
+
+blob:https://chatgpt.com/561b7b02-0682-47de-bd6e-078f72bb6bf8
+Do this next in the same Ubuntu terminal
+First run:
+sudo apt update
+Let it finish completely.
+Then run:
+sudo apt install sqlite3
+If it asks:
+Do you want to continue? [Y/n]
+enter:
+Y
+Then check:
+sqlite3 --version
+Don't worry about this line
+Command 'sqlite3' not found
+That's expected because the installation failed.
+Send me the output after sudo apt update finishes. If it still gives a 404, I'll give you the next fix rather than changing anything in your ACTDRS project.
+
+
+
+Day 13 — Step 5: Verify the HIGH-risk event in the database
+First, in your Ubuntu terminal, check whether SQLite is now installed:
+sqlite3 --version
+If it shows a version number
+Run:
+sqlite3 actdrs.db
+You should now see something like:
+SQLite version ...
+sqlite>
+Then enter:
+SELECT * FROM security_events ORDER BY id DESC LIMIT 10;
+Look for:
+HIGH_OVERALL_NETWORK_RISK
+You can then exit SQLite with:
+.quit
+If sqlite3 --version still says "command not found"
+Stop there and send me the output. Don't change any ACTDRS code.
+After Step 5 succeeds → Day 13 Step 6
+We'll do the final Day 13 test:
+Network connections → detection → frequency analysis → risk correlation → HIGH risk → security event → SQLite verification
+Then we'll upload Day 13 to GitHub.
+So run only this first:
+sqlite3 --version
+Send me what you get.
+
+
+
+
+
+    
+
+
+
+
+
+
+
+ok next?
+
+
+
+
+
+
+
+
+
+
+
+
+Yes 👍 Let's move to Day 13 — Step 6: Final Test + GitHub Upload.
+You have already confirmed the important result:
+Overall Score : 70
+Overall Level : HIGH
+So now we do the complete end-to-end test and then upload Day 13.
+🚀 Step 6A — Final ACTDRS test
+In your Ubuntu terminal:
+cd /home/priya/ACTDRS
+Run:
+python3 -m monitoring.network_monitor
+Let it run for about 20–30 seconds.
+You should see the network monitor processing connections and lines such as:
+Connection Count : ...
+Frequency Status : ...
+Overall Risk Score   : ...
+Overall Risk Level   : ...
+Overall Risk Reasons : ...
+If a HIGH-risk combination occurs, you may see:
+Overall Risk Level   : HIGH
+⚠ HIGH OVERALL NETWORK RISK RECORDED!
+Then press:
+Ctrl + C
+Step 6B — Check the database
+If SQLite is installed, run:
+sqlite3 actdrs.db
+Then:
+SELECT * FROM security_events ORDER BY id DESC LIMIT 10;
+You want to confirm that your security events are actually being stored.
+Exit:
+.quit
+Step 6C — Upload Day 13 to GitHub
+From:
+cd /home/priya/ACTDRS
+run:
+git status
+Then:
+git add .
+Then:
+git commit -m "Complete Day 13 risk correlation"
+Finally:
+git push
+🎯 Day 13 will then be complete
+Your progression becomes:
+Day 1–10 ✅
+Day 11 ✅
+Day 12 ✅
+Day 13 ✅
+And the ACTDRS detection chain now has:
+Network activity → Network risk → Connection frequency → Suspicious port → Risk correlation → Overall risk → Security event → SQLite
+After git push succeeds, we'll start Day 14, where we move from simply correlating signals toward more meaningful threat detection behavior.
+
+
