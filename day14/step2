@@ -1,0 +1,382 @@
+Day 14 — Step 2
+We will now connect:
+CPU
+RAM
+Disk
+ ↓
+Existing Detection
+ ↓
+New Threat Classifier
+ ↓
+Threat Type + Severity + Reasons
+ ↓
+SQLite + existing response
+Network signals will be connected separately from network_monitor.py, because that monitor already has the network-specific information.
+Replace monitoring/system_monitor.py
+Open:
+/home/priya/ACTDRS/monitoring/system_monitor.py
+Replace the entire file with this:
+import psutil
+import time
+
+# ============================================================
+# DETECTION MODULE
+# ============================================================
+
+from detection.threat_detector import (
+    detect_cpu,
+    detect_ram,
+    detect_disk
+)
+
+# ============================================================
+# THREAT CLASSIFICATION MODULE
+# ============================================================
+
+from detection.threat_classifier import (
+    classify_threat
+)
+
+# ============================================================
+# AI DECISION MODULE
+# ============================================================
+
+from ai.decision_engine import decide
+
+# ============================================================
+# RESPONSE MODULE
+# ============================================================
+
+from response.response_engine import (
+    respond_to_cpu,
+    respond_to_ram,
+    respond_to_disk
+)
+
+# ============================================================
+# DATABASE MODULE
+# ============================================================
+
+from database.database_manager import (
+    create_database,
+    insert_log,
+    create_security_events_table,
+    insert_security_event
+)
+
+
+# ============================================================
+# PROGRAM START
+# ============================================================
+
+print("======= ACTDRS System Monitor =======")
+
+
+# ============================================================
+# CREATE DATABASE AND SECURITY EVENT TABLE
+# ============================================================
+
+create_database()
+create_security_events_table()
+
+
+# ============================================================
+# MAIN MONITORING LOOP
+# ============================================================
+
+while True:
+
+    # ========================================================
+    # SYSTEM MONITORING
+    # ========================================================
+
+    cpu = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+
+    print("-----------------------")
+
+
+    # ========================================================
+    # CPU DETECTION
+    # ========================================================
+
+    cpu_status = detect_cpu(cpu)
+
+    print(f"CPU Usage  : {cpu}%")
+    print(f"CPU Status : {cpu_status}")
+
+
+    # ========================================================
+    # RAM DETECTION
+    # ========================================================
+
+    ram_status = detect_ram(memory.percent)
+
+    print(f"RAM Usage  : {memory.percent}%")
+    print(f"RAM Status : {ram_status}")
+
+
+    # ========================================================
+    # DISK DETECTION
+    # ========================================================
+
+    disk_status = detect_disk(disk.percent)
+
+    print(f"Disk Usage  : {disk.percent}%")
+    print(f"Disk Status : {disk_status}")
+
+
+    # ========================================================
+    # AI DECISION
+    # ========================================================
+
+    decision = decide(
+        cpu_status,
+        ram_status,
+        disk_status
+    )
+
+    print(f"\nAI DECISION : {decision}")
+
+
+    # ========================================================
+    # SYSTEM RISK SCORE
+    # ========================================================
+    #
+    # At this stage, only system-monitoring signals are
+    # available here.
+    #
+    # Network signals will be correlated separately by
+    # network_monitor.py.
+    #
+    # Each abnormal system signal contributes 30 points.
+    # The final score is limited to 100.
+    # ========================================================
+
+    system_score = 0
+
+    if cpu_status.strip() == "HIGH":
+        system_score += 30
+
+    if ram_status.strip() == "HIGH":
+        system_score += 30
+
+    if disk_status.strip() == "HIGH":
+        system_score += 30
+
+    if system_score > 100:
+        system_score = 100
+
+
+    # ========================================================
+    # THREAT CLASSIFICATION
+    # ========================================================
+    #
+    # Network signals are NORMAL here because they are
+    # analyzed by the separate network monitor.
+    #
+    # This connects the new classifier to the existing
+    # system-monitoring pipeline without pretending that
+    # network information is available here.
+    # ========================================================
+
+    threat_type, threat_severity, threat_reasons = classify_threat(
+        cpu_status.strip(),
+        ram_status.strip(),
+        disk_status.strip(),
+        "NORMAL",
+        "NORMAL",
+        system_score
+    )
+
+
+    # ========================================================
+    # DISPLAY THREAT CLASSIFICATION
+    # ========================================================
+
+    print("\nThreat Classification")
+    print(f"Threat Type     : {threat_type}")
+    print(f"Threat Severity : {threat_severity}")
+    print(f"Threat Reasons  : {threat_reasons}")
+
+
+    # ========================================================
+    # SYSTEM SECURITY EVENTS
+    # ========================================================
+
+    if cpu_status.strip() == "HIGH":
+
+        insert_security_event(
+            "HIGH_CPU",
+            "MEDIUM",
+            f"CPU usage reached {cpu}%",
+            decision
+        )
+
+        print("⚠ HIGH CPU SECURITY EVENT RECORDED!")
+
+
+    if ram_status.strip() == "HIGH":
+
+        insert_security_event(
+            "HIGH_RAM",
+            "MEDIUM",
+            f"RAM usage reached {memory.percent}%",
+            decision
+        )
+
+        print("⚠ HIGH RAM SECURITY EVENT RECORDED!")
+
+
+    if disk_status.strip() == "HIGH":
+
+        insert_security_event(
+            "HIGH_DISK",
+            "HIGH",
+            f"Disk usage reached {disk.percent}%",
+            decision
+        )
+
+        print("⚠ HIGH DISK SECURITY EVENT RECORDED!")
+
+
+    # ========================================================
+    # UNIFIED THREAT EVENT
+    # ========================================================
+
+    if threat_severity in ["MEDIUM", "HIGH"]:
+
+        insert_security_event(
+            threat_type,
+            threat_severity,
+            f"Threat reasons: {threat_reasons}",
+            decision
+        )
+
+        print("⚠ UNIFIED THREAT SECURITY EVENT RECORDED!")
+
+
+    # ========================================================
+    # DATABASE LOGGING
+    # ========================================================
+
+    insert_log(
+        cpu,
+        memory.percent,
+        disk.percent,
+        decision
+    )
+
+    print("Log saved to database.")
+
+
+    # ========================================================
+    # RESPONSE ENGINE
+    # ========================================================
+
+    respond_to_cpu(cpu_status)
+    respond_to_ram(ram_status)
+    respond_to_disk(disk_status)
+
+
+    # ========================================================
+    # RUNNING PROCESSES
+    # ========================================================
+
+    print("\nRunning Processes\n")
+
+    for process in psutil.process_iter(['pid', 'name']):
+
+        print(process.info)
+
+
+    # ========================================================
+    # WAIT FOR NEXT SCAN
+    # ========================================================
+
+    print("\nWaiting for next scan...\n")
+    print("--------------------------------")
+
+    time.sleep(3)
+
+Now save it
+If using VS Code:
+Ctrl + S
+Do not change any other file.
+Step 2 test
+Run:
+cd /home/priya/ACTDRS
+Then:
+python3 -m monitoring.system_monitor
+You should now see something like:
+======= ACTDRS System Monitor =======
+
+CPU Usage  : 12.5%
+CPU Status : NORMAL
+
+RAM Usage  : 45.2%
+RAM Status : NORMAL
+
+Disk Usage  : 38.1%
+Disk Status : NORMAL
+
+AI DECISION : NORMAL
+
+Threat Classification
+Threat Type     : NORMAL_ACTIVITY
+Threat Severity : LOW
+Threat Reasons  : []
+
+Log saved to database.
+Then it will continue scanning every few seconds.
+If a system resource becomes HIGH
+For example:
+CPU Status : HIGH
+you should see something like:
+Threat Classification
+Threat Type     : ABNORMAL_SYSTEM_ACTIVITY
+Threat Severity : MEDIUM
+Threat Reasons  : ['High CPU usage']
+and:
+⚠ HIGH CPU SECURITY EVENT RECORDED!
+⚠ UNIFIED THREAT SECURITY EVENT RECORDED!
+One important point
+You may notice that the classifier currently shows:
+Port      : NORMAL
+Frequency : NORMAL
+That is intentional.
+We're not pretending the system monitor knows network information. Your network_monitor.py already has the real:
+- suspicious-port result
+- connection-frequency result
+- network risk score
+- overall risk score
+Next we will connect the classifier to those real network signals.
+So the architecture will become:
+                 ACTDRS
+                   │
+        ┌──────────┴──────────┐
+        ▼                     ▼
+ System Monitor        Network Monitor
+        │                     │
+        ▼                     ▼
+System Detection      Network Detection
+        │                     │
+        └──────────┬──────────┘
+                   ▼
+            Threat Classifier
+                   │
+                   ▼
+            Risk Correlation
+                   │
+                   ▼
+             Decision Engine
+                   │
+                   ▼
+             Response Engine
+Your task now
+Run:
+python3 -m monitoring.system_monitor
+Let it produce 2–3 monitoring cycles, then press Ctrl+C.
+Send me the output.
+If it runs correctly, Day 14 Step 2 is complete, and we'll proceed directly to connecting the classifier to your real network-monitoring signals.
