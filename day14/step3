@@ -1,0 +1,460 @@
+Day 14 — Step 3: Network Threat Classification
+We're adding:
+Network connection
+       ↓
+Suspicious port ─────┐
+                     │
+Connection frequency ┤
+                     ↓
+              Risk Correlation
+                     ↓
+               Overall Score
+                     ↓
+             Threat Classifier
+                     ↓
+       Threat Type + Severity + Reasons
+Your existing detection, frequency tracking, risk correlation, database logging, and HIGH-risk event code will remain.
+1. Replace network_monitor.py
+Open:
+/home/priya/ACTDRS/monitoring/network_monitor.py
+Replace the entire file with this:
+import psutil
+
+from analyzer.network_analyzer import calculate_network_risk
+from analyzer.connection_tracker import track_connection
+from analyzer.risk_correlator import calculate_overall_risk
+
+from database.database_manager import (
+    insert_network_event,
+    insert_security_event
+)
+
+from detection.threat_detector import detect_suspicious_port
+
+from detection.threat_classifier import classify_threat
+
+
+# ============================================================
+# GET PROCESS NAME
+# ============================================================
+
+def get_process_name(pid):
+
+    if pid is None:
+        return "Unknown"
+
+    try:
+        process = psutil.Process(pid)
+        return process.name()
+
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
+
+
+# ============================================================
+# GET NETWORK PROTOCOL
+# ============================================================
+
+def get_protocol(connection):
+
+    if connection.type == 1:
+        return "TCP"
+
+    elif connection.type == 2:
+        return "UDP"
+
+    else:
+        return "UNKNOWN"
+
+
+# ============================================================
+# MONITOR NETWORK CONNECTIONS
+# ============================================================
+
+def monitor_network_connections():
+
+    connections = psutil.net_connections(kind="inet")
+
+    print("\n========================================")
+    print("       ACTDRS NETWORK MONITOR")
+    print("========================================")
+
+    for connection in connections:
+
+        # ----------------------------------------------------
+        # SOURCE INFORMATION
+        # ----------------------------------------------------
+
+        if connection.laddr:
+
+            source_ip = connection.laddr.ip
+            source_port = connection.laddr.port
+
+        else:
+
+            source_ip = "N/A"
+            source_port = "N/A"
+
+
+        # ----------------------------------------------------
+        # DESTINATION INFORMATION
+        # ----------------------------------------------------
+
+        if connection.raddr:
+
+            destination_ip = connection.raddr.ip
+            destination_port = connection.raddr.port
+
+        else:
+
+            destination_ip = "N/A"
+            destination_port = "N/A"
+
+
+        # ----------------------------------------------------
+        # PROCESS INFORMATION
+        # ----------------------------------------------------
+
+        pid = connection.pid
+        process_name = get_process_name(pid)
+        protocol = get_protocol(connection)
+
+
+        # ----------------------------------------------------
+        # SUSPICIOUS PORT DETECTION
+        # ----------------------------------------------------
+
+        port_status = detect_suspicious_port(destination_port)
+
+        print(f"\nPort Status     : {port_status}")
+
+
+        if port_status == "SUSPICIOUS":
+
+            insert_security_event(
+                "SUSPICIOUS_PORT",
+                "MEDIUM",
+                f"Suspicious destination port detected: "
+                f"{destination_port}",
+                "CHECK_NETWORK"
+            )
+
+            print("⚠ SUSPICIOUS PORT SECURITY EVENT RECORDED!")
+
+
+        # ----------------------------------------------------
+        # SAVE NETWORK CONNECTION
+        # ----------------------------------------------------
+
+        insert_network_event(
+            process_name,
+            pid,
+            protocol,
+            connection.status,
+            source_ip,
+            source_port,
+            destination_ip,
+            destination_port
+        )
+
+
+        # ----------------------------------------------------
+        # INDIVIDUAL NETWORK RISK ANALYSIS
+        # ----------------------------------------------------
+
+        risk_score, risk_level, reasons = calculate_network_risk(
+            port_status,
+            process_name,
+            destination_ip
+        )
+
+
+        # ----------------------------------------------------
+        # CONNECTION FREQUENCY TRACKING
+        # ----------------------------------------------------
+
+        connection_count, frequency_status = track_connection(
+            process_name,
+            destination_ip
+        )
+
+        print(f"Connection Count: {connection_count}")
+        print(f"Frequency Status : {frequency_status}")
+
+
+        # ----------------------------------------------------
+        # FREQUENCY RISK
+        # ----------------------------------------------------
+
+        if frequency_status == "SUSPICIOUS":
+
+            risk_score += 30
+
+            reasons.append("High connection frequency")
+
+            if risk_score >= 70:
+
+                risk_level = "HIGH"
+
+            elif risk_score >= 40:
+
+                risk_level = "MEDIUM"
+
+            else:
+
+                risk_level = "LOW"
+
+
+            insert_security_event(
+                "REPEATED_CONNECTION",
+                "MEDIUM",
+                f"Repeated connection detected from "
+                f"{process_name} to {destination_ip}. "
+                f"Connection count: {connection_count}",
+                "CHECK_NETWORK_FREQUENCY"
+            )
+
+            print(
+                "⚠ REPEATED CONNECTION "
+                "SECURITY EVENT RECORDED!"
+            )
+
+
+        # ----------------------------------------------------
+        # OVERALL RISK CORRELATION
+        # ----------------------------------------------------
+
+        overall_score, overall_level, overall_reasons = (
+            calculate_overall_risk(
+                risk_score,
+                frequency_status,
+                port_status
+            )
+        )
+
+        print(
+            f"Overall Risk Score   : {overall_score}"
+        )
+
+        print(
+            f"Overall Risk Level   : {overall_level}"
+        )
+
+        print(
+            f"Overall Risk Reasons : {overall_reasons}"
+        )
+
+
+        # ----------------------------------------------------
+        # HIGH OVERALL RISK
+        # ----------------------------------------------------
+
+        if overall_level == "HIGH":
+
+            insert_security_event(
+                "HIGH_OVERALL_NETWORK_RISK",
+                "HIGH",
+                f"Overall network risk detected: "
+                f"{overall_reasons}",
+                "INVESTIGATE_NETWORK_ACTIVITY"
+            )
+
+            print(
+                "⚠ HIGH OVERALL NETWORK RISK RECORDED!"
+            )
+
+
+        # ----------------------------------------------------
+        # THREAT CLASSIFICATION
+        # ----------------------------------------------------
+        #
+        # The network monitor does not directly collect CPU,
+        # RAM, and disk values.
+        #
+        # Therefore those three signals are marked NORMAL here.
+        #
+        # The classifier receives the REAL network signals:
+        #
+        #   - suspicious port
+        #   - connection frequency
+        #   - overall risk score
+        #
+        # System-level classification is handled by
+        # system_monitor.py.
+        # ----------------------------------------------------
+
+        threat_type, threat_severity, threat_reasons = (
+            classify_threat(
+                "NORMAL",
+                "NORMAL",
+                "NORMAL",
+                port_status,
+                frequency_status,
+                overall_score
+            )
+        )
+
+
+        # ----------------------------------------------------
+        # DISPLAY THREAT CLASSIFICATION
+        # ----------------------------------------------------
+
+        print("\nThreat Classification")
+
+        print(
+            f"Threat Type     : {threat_type}"
+        )
+
+        print(
+            f"Threat Severity : {threat_severity}"
+        )
+
+        print(
+            f"Threat Reasons  : {threat_reasons}"
+        )
+
+
+        # ----------------------------------------------------
+        # NETWORK THREAT SECURITY EVENT
+        # ----------------------------------------------------
+
+        if threat_severity in ["MEDIUM", "HIGH"]:
+
+            insert_security_event(
+                threat_type,
+                threat_severity,
+                f"Network threat detected. "
+                f"Process: {process_name}. "
+                f"Destination: {destination_ip}. "
+                f"Reasons: {threat_reasons}",
+                "INVESTIGATE_NETWORK_THREAT"
+            )
+
+            print(
+                "⚠ NETWORK THREAT "
+                "SECURITY EVENT RECORDED!"
+            )
+
+
+        # ----------------------------------------------------
+        # DISPLAY NETWORK INFORMATION
+        # ----------------------------------------------------
+
+        print("----------------------------------------")
+
+        print(
+            f"Process         : {process_name}"
+        )
+
+        print(
+            f"PID             : {pid}"
+        )
+
+        print(
+            f"Protocol        : {protocol}"
+        )
+
+        print(
+            f"Status          : {connection.status}"
+        )
+
+        print(
+            f"Source IP       : {source_ip}"
+        )
+
+        print(
+            f"Source Port     : {source_port}"
+        )
+
+        print(
+            f"Destination IP  : {destination_ip}"
+        )
+
+        print(
+            f"Destination Port: {destination_port}"
+        )
+
+        print(
+            f"Risk Score      : {risk_score}"
+        )
+
+        print(
+            f"Risk Level      : {risk_level}"
+        )
+
+        print(
+            f"Risk Reasons    : {reasons}"
+        )
+
+        print(
+            f"Overall Score   : {overall_score}"
+        )
+
+        print(
+            f"Overall Level   : {overall_level}"
+        )
+
+        print(
+            f"Overall Reasons : {overall_reasons}"
+        )
+
+        print("----------------------------------------")
+
+
+# ============================================================
+# PROGRAM ENTRY POINT
+# ============================================================
+
+if __name__ == "__main__":
+
+    monitor_network_connections()
+
+2. Save the file
+In VS Code:
+Ctrl + S
+3. Test the network monitor
+From Ubuntu:
+cd /home/priya/ACTDRS
+Then:
+python3 -m monitoring.network_monitor
+Let it run and inspect the output.
+You should now see a new section:
+Threat Classification
+Threat Type     : NORMAL_ACTIVITY
+Threat Severity : LOW
+Threat Reasons  : []
+For suspicious activity, you may get:
+Threat Classification
+Threat Type     : SUSPICIOUS_NETWORK_PORT
+Threat Severity : MEDIUM
+Threat Reasons  : ['Suspicious destination port']
+or:
+Threat Classification
+Threat Type     : REPEATED_NETWORK_ACTIVITY
+Threat Severity : HIGH
+Threat Reasons  : ['Repeated network connection']
+or, if both signals occur:
+Threat Classification
+Threat Type     : SUSPICIOUS_NETWORK_ACTIVITY
+Threat Severity : HIGH
+Threat Reasons  : [
+    'Suspicious destination port',
+    'Repeated network connection'
+]
+One thing I am deliberately NOT changing yet
+Your current network code has this:
+frequency suspicious
+       ↓
+risk_score += 30
+       ↓
+calculate_overall_risk()
+       ↓
+frequency suspicious again
+       ↓
+risk_correlator adds +20
+So the frequency signal can currently contribute twice to the score.
+I haven't silently removed that because it's part of your existing Day 12/13 implementation. After this classifier integration is working, we'll clean up that scoring architecture deliberately and test that the final risk score is mathematically consistent.
+That's important if we're aiming for a project you can actually demonstrate and explain technically.
+For now, run:
+python3 -m monitoring.network_monitor
+and send me the output. If it runs correctly, Day 14 Step 3 is complete, and we'll move to the next component rather than changing anything unnecessarily.
